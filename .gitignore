@@ -1,0 +1,8 @@
+/dist/
+.cabal-sandbox
+/cabal.sandbox.config
+.stack-work/
+
+queries/
+schemas/
+results/

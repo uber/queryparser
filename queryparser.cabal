@@ -1,0 +1,198 @@
+name:                queryparser
+
+-- The package version.  See the Haskell package versioning policy (PVP)
+-- for standards guiding when and how versions should be incremented.
+-- http://www.haskell.org/haskellwiki/Package_versioning_policy
+-- PVP summary:      +-+------- breaking API changes
+--                   | | +----- non-breaking API additions
+--                   | | | +--- code changes with no API change
+version:             0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- The license under which the package is released.
+license:             MIT
+
+-- The file containing the license text.
+license-file:        LICENSE
+
+-- The package author(s).
+author:              Heli Wang, David Thomas, Matt Halverson
+
+-- An email address to which users can send suggestions, bug reports, and
+-- patches.
+maintainer:          heli@uber.com
+
+-- A copyright notice.
+-- copyright:
+
+category:            Database
+
+build-type:          Simple
+
+-- Extra files to be distributed with the package, such as examples or a
+-- README.
+-- extra-source-files:
+
+-- Constraint on the version of Cabal needed to build this package.
+cabal-version:       >=1.10
+
+
+library
+  -- Modules exported by the library.
+  exposed-modules:     Database.Sql.Vertica.Parser
+                     , Database.Sql.Vertica.Parser.Token
+                     , Database.Sql.Vertica.Scanner
+                     , Database.Sql.Vertica.Token
+                     , Database.Sql.Vertica.Type
+                     , Database.Sql.Vertica.Parser.Internal
+                     , Database.Sql.Vertica.Parser.IngestionOptions
+                     , Database.Sql.Vertica.Parser.Shared
+                     , Database.Sql.Hive.Parser.Internal
+                     , Database.Sql.Hive.Parser
+                     , Database.Sql.Hive.Parser.Token
+                     , Database.Sql.Hive.Scanner
+                     , Database.Sql.Hive.Token
+                     , Database.Sql.Hive.Type
+                     , Database.Sql.Presto.Parser
+                     , Database.Sql.Presto.Parser.Internal
+                     , Database.Sql.Presto.Parser.Token
+                     , Database.Sql.Presto.Token
+                     , Database.Sql.Presto.Type
+                     , Database.Sql.Presto.Scanner
+                     , Database.Sql.Position
+                     , Database.Sql.Helpers
+                     , Database.Sql.Info
+                     , Database.Sql.Type
+                     , Database.Sql.Type.Names
+                     , Database.Sql.Type.Query
+                     , Database.Sql.Type.Schema
+                     , Database.Sql.Type.Scope
+                     , Database.Sql.Type.TableProps
+                     , Database.Sql.Type.Unused
+                     , Database.Sql.Pretty
+                     , Database.Sql.Util.Columns
+                     , Database.Sql.Util.Eval
+                     , Database.Sql.Util.Eval.Concrete
+                     , Database.Sql.Util.Joins
+                     , Database.Sql.Util.Scope
+                     , Database.Sql.Util.Tables
+                     , Database.Sql.Util.Lineage.Table
+                     , Database.Sql.Util.Lineage.ColumnPlus
+                     , Database.Sql.Util.Schema
+
+  -- Modules included in this library but not exported.
+  other-modules:       Data.Predicate
+                     , Data.Maybe.More
+                     , Data.Functor.Identity.Orphans
+
+  default-extensions:  OverloadedStrings
+                     , LambdaCase
+                     , RecordWildCards
+                     , TupleSections
+                     , ConstraintKinds
+                     , FlexibleInstances
+
+  -- Other library packages from which modules are imported.
+  build-depends:       base >=4.8 && <4.9
+                     , text >=1.2 && <1.3
+                     , bytestring
+                     , containers
+                     , semigroups >= 0.16
+                     , mtl >= 2.2 && < 2.3
+                     , parsec >= 3.1 && < 3.2
+                     , pretty >= 1.1 && < 1.2
+                     , aeson >= 0.8
+                     , yaml >= 0.8 && < 0.9
+                     , unordered-containers
+                     , hashable
+                     , QuickCheck
+                     , regex-tdfa
+                     , fixed-list
+
+  -- Directories containing source files.
+  hs-source-dirs:      src
+
+
+  ghc-options: -Wall -Werror
+
+  -- Base language which the package is written in.
+  default-language:    Haskell2010
+
+test-suite queryparser-test
+  type:                exitcode-stdio-1.0
+  main-is:             Tests.hs
+  other-modules:       Database.Sql.Position.Test
+                     , Database.Sql.Info.Test
+                     , Database.Sql.Pretty.Test
+                     , Database.Sql.Vertica.Scanner.Test
+                     , Database.Sql.Vertica.Parser.Test
+                     , Database.Sql.Hive.Scanner.Test
+                     , Database.Sql.Hive.Parser.Test
+                     , Database.Sql.Presto.Scanner.Test
+                     , Database.Sql.Presto.Parser.Test
+                     , Database.Sql.Util.Eval.Test
+                     , Database.Sql.Util.Joins.Test
+                     , Database.Sql.Util.Json.Test
+                     , Database.Sql.Util.Lineage.Table.Test
+                     , Database.Sql.Util.Lineage.ColumnPlus.Test
+                     , Database.Sql.Util.Schema.Test
+                     , Database.Sql.Util.Scope.Test
+                     , Database.Sql.Util.Test
+                     , Database.Sql.Util.Catalog
+                     , Database.Sql.Util.Catalog.Test
+                     , Database.Sql.Util.Columns.Test
+                     , Test.HUnit.Ticket
+  build-depends:       base >=4.8 && <4.9
+                     , queryparser
+                     , aeson >= 0.8
+                     , containers
+                     , hashable
+                     , mtl >= 2.2 && < 2.3
+                     , parsec >= 3.1 && < 3.2
+                     , semigroups >= 0.16
+                     , text >=1.2 && <1.3
+                     , unordered-containers
+                     , file-location
+                     , hpc
+                     , HUnit >= 1.2 && < 1.4
+                     , template-haskell
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-quickcheck2
+                     , QuickCheck
+                     , syb
+  hs-source-dirs:      test
+
+  ghc-options: -Wall -Werror -with-rtsopts=-M5M
+
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , LambdaCase
+                     , RecordWildCards
+                     , TupleSections
+                     , ConstraintKinds
+                     , FlexibleInstances
+
+benchmark queryparser-bench
+  type:                exitcode-stdio-1.0
+  main-is:             Bench.hs
+  build-depends:       base >=4.8 && <4.9
+                     , queryparser
+                     , criterion
+                     , text
+  hs-source-dirs:      bench
+
+  ghc-options: -Wall -Werror -with-rtsopts=-M5M
+
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , LambdaCase
+                     , RecordWildCards
+                     , TupleSections
+                     , ConstraintKinds
+                     , FlexibleInstances
