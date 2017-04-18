@@ -89,6 +89,7 @@ library
   other-modules:       Data.Predicate
                      , Data.Maybe.More
                      , Data.Functor.Identity.Orphans
+                     , Demo
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
