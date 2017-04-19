@@ -387,31 +387,7 @@ testColumnLineage = test
                     )
                   ]
               )
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/app/dwh/bar';" defaultTestCatalog
-              (@?= M.fromList
-                    [ ( Left $ FullyQualifiedTableName "default_db" "public" "foo"
-                      , singleTableSet Range{start = Position 1 20 20, end = Position 1 62 62}
-                          $ FullyQualifiedTableName "default_db" "dwh" "bar"
-                      )
-                    , ( Right $ FullyQualifiedColumnName "default_db" "public" "foo" "a"
-                      , singleColumnSet Range{start = Position 1 20 20, end = Position 1 62 62}
-                          $ FullyQualifiedColumnName "default_db" "dwh" "bar" "a" )
-                    ]
-              )
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/user/hive/warehouse/OTHER_DB.db/OTHER_TABLE';" defaultTestCatalog
-              (@?= M.fromList
-                    [ ( Left $ FullyQualifiedTableName "default_db" "public" "foo"
-                      , singleTableSet Range{start = Position 1 20 20, end = Position 1 94 94}
-                          $ FullyQualifiedTableName "default_db" "OTHER_DB" "OTHER_TABLE"
-                      )
-                    , ( Right $ FullyQualifiedColumnName "default_db" "public" "foo" "a"
-                      , singleColumnSet Range{start = Position 1 20 20, end = Position 1 94 94}
-                          $ FullyQualifiedColumnName "default_db" "OTHER_DB" "OTHER_TABLE" "a"
-                      )
-                    ]
-              )
-        , testHive "ALTER TABLE foo SET LOCATION 'something we dont have a pattern for';" defaultTestCatalog (@?= M.empty)
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/app/dwh/bar/';" defaultTestCatalog (@?= M.empty)  -- note the trailing '/', breaks the regex
+        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://some/random/path';" defaultTestCatalog (@?= M.empty)
         , testVertica "ALTER PROJECTION foo RENAME TO bar;" defaultTestCatalog (@?= M.empty)
 
         , testAll "GRANT SELECT ON foo TO bar;" defaultTestCatalog (@?= M.empty)

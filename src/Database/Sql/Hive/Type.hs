@@ -45,15 +45,12 @@ import Control.Monad.Identity
 import Control.Monad.Writer (tell)
 
 import Data.Aeson
-import qualified Data.List as L
 import qualified Data.Map  as M
 import qualified Data.Set  as S
-import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BL
 import Data.Proxy (Proxy (..))
-import Text.Regex.TDFA ((=~))
 
 import GHC.Generics (Generic)
 import Data.Data (Data)
@@ -142,38 +139,6 @@ data Location a = HDFSPath a ByteString
       deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
 
 
-locationToTable :: forall a . FQTableName a -> Location a -> Maybe (FQTableName a)
-locationToTable existingTableName (HDFSPath info path) = do
-    let patterns :: [([String] -> [String], String)]
-        patterns = [ (id, "^hdfs://nameservice1/app/(dwh)/([a-zA-Z0-9_]+)$")
-                   , (id, "^hdfs://nameservice1/user/hive/warehouse/([a-zA-Z0-9_]+)\\.db/([a-zA-Z0-9_]+)$")
-                   , (\case
-                        [] -> []
-                        [sch, tbl] -> ["etltmp", "stg_" ++ sch ++ "_" ++ tbl]
-                        [_] -> error "fewer groups returned than present in pattern"
-                        _ -> error "more groups returned than present in pattern"
-                     , "^hdfs://nameservice1/app/(dwh)/([a-zA-Z0-9_]+)/datestr=[0-9_-]+$"
-                     )
-                   ]
-
-    path' <- either (const Nothing) Just $ TL.decodeUtf8' path
-    match <- L.find (not . null) $ map (captureGroups path') patterns
-
-    toFqtn match
-
-  where
-    captureGroups :: TL.Text -> ([String] -> [String], String) -> [TL.Text]
-    captureGroups str (adjust, pattern) =
-        let (_, _, _, groups) = (TL.unpack str =~ pattern) :: (String, String, String, [String])
-         in map TL.pack $ adjust groups
-
-    toFqtn :: [TL.Text] -> Maybe (FQTableName a)
-    toFqtn [schema, table] =
-        -- use the existing table's DatabaseName
-        let (QTableName _ (Identity (QSchemaName _ (Identity (DatabaseName _ db)) _ _)) _) = existingTableName
-         in Just $ QTableName info (pure $ QSchemaName info (pure $ DatabaseName info db) schema NormalSchema) table
-    toFqtn _ = Nothing
-
 data InsertDirectoryLocale a = InsertDirectoryLocal a | InsertDirectoryHDFS
       deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
 
@@ -260,20 +225,8 @@ instance HasTableLineage (HiveStatement ResolvedNames a) where
     getTableLineage (HiveTruncatePartitionStmt (TruncatePartition _ (Truncate _ (RTableName t _)))) =
         let table = mkFQTN t
          in M.singleton table $ S.singleton table
-    getTableLineage (HiveAlterTableSetLocationStmt (AlterTableSetLocation _ (RTableName t _) loc)) =
-        case locationToTable t loc of
-            Nothing -> M.empty  -- fail gracefully by saying "dunno"
-            Just t' ->
-                let table = mkFQTN t
-                    referent = mkFQTN t'
-                 in M.singleton table $ S.singleton referent
-    getTableLineage (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ (RTableName t _) _ loc)) =
-        case locationToTable t loc of
-            Nothing -> M.empty  -- fail gracefully by saying "dunno"
-            Just t' ->
-                let table = mkFQTN t
-                    referent = mkFQTN t'
-                 in M.singleton table $ S.singleton referent
+    getTableLineage (HiveAlterTableSetLocationStmt _) = M.empty
+    getTableLineage (HiveAlterPartitionSetLocationStmt _) = M.empty
     getTableLineage (HiveUnhandledStatement _) = M.empty
 
 instance HasColumnLineage (HiveStatement ResolvedNames Range) where
@@ -285,20 +238,8 @@ instance HasColumnLineage (HiveStatement ResolvedNames Range) where
         returnNothing
             $ M.insert (Left $ fqtnToFQTN t) (singleTableSet (getInfo t) $ fqtnToFQTN t)
                 $ M.fromList $ map ((\ fqcn -> (Right fqcn, singleColumnSet (getInfo t) fqcn)) . fqcnToFQCN . qualifyColumnName t) columnsList
-    getColumnLineage (HiveAlterTableSetLocationStmt (AlterTableSetLocation _ (RTableName to SchemaMember{..}) loc)) =
-        returnNothing $
-            case locationToTable to loc of
-                Nothing -> M.empty  -- fail gracefully by saying "dunno"
-                Just from ->
-                    M.insert (Left $ fqtnToFQTN to) (singleTableSet (getInfo from) $ fqtnToFQTN from)
-                        $ M.fromList $ zip (map (Right . fqcnToFQCN . qualifyColumnName to) columnsList) (map (singleColumnSet (getInfo from) . fqcnToFQCN . qualifyColumnName from) columnsList)
-    getColumnLineage (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ (RTableName to SchemaMember{..}) _ loc)) =
-        returnNothing $
-            case locationToTable to loc of
-                Nothing -> M.empty  -- fail gracefully by saying "dunno"
-                Just from ->
-                    M.insert (Left $ fqtnToFQTN to) (singleTableSet (getInfo from) $ fqtnToFQTN from)
-                        $ M.fromList $ zip (map (Right . fqcnToFQCN . qualifyColumnName to) columnsList) (map (singleColumnSet (getInfo from) . fqcnToFQCN . qualifyColumnName from) columnsList)
+    getColumnLineage (HiveAlterTableSetLocationStmt _) = returnNothing M.empty
+    getColumnLineage (HiveAlterPartitionSetLocationStmt _) = returnNothing M.empty
     getColumnLineage (HiveUnhandledStatement _) = returnNothing M.empty
 
 resolveHiveStatement :: HiveStatement RawNames a -> Resolver (HiveStatement ResolvedNames) a
@@ -494,9 +435,8 @@ instance HasTables (TruncatePartition ResolvedNames a) where
   goTables (TruncatePartition _ s) = goTables s
 
 instance HasTables (AlterTableSetLocation ResolvedNames a) where
-  goTables (AlterTableSetLocation _ table@(RTableName existing _) loc) = do
+  goTables (AlterTableSetLocation _ table _) = do
       goTables table
-      goTables $ locationToTable existing loc
 
 
 instance HasColumns (HiveStatement ResolvedNames a) where

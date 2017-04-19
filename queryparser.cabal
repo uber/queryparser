@@ -112,7 +112,6 @@ library
                      , unordered-containers
                      , hashable
                      , QuickCheck
-                     , regex-tdfa
                      , fixed-list
 
   -- Directories containing source files.
