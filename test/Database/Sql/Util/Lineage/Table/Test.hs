@@ -166,16 +166,7 @@ testTableLineage = test
         , testHive "TRUNCATE TABLE foo;" defaultTestCatalog
               (@=? M.singleton (FullyQualifiedTableName "default_db" "public" "foo") S.empty)
         -- Presto doesn't have TRUNCATE
-        , testHive "TRUNCATE TABLE foo PARTITION (datestr = '2016-04-01', a = '42');" defaultTestCatalog
-              (@=? (M.singleton (FullyQualifiedTableName "default_db" "public" "foo") $ S.singleton $ FullyQualifiedTableName "default_db" "public" "foo"))
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/app/dwh/bar';" defaultTestCatalog
-              (@=? (M.singleton (FullyQualifiedTableName "default_db" "public" "foo") $ S.singleton $ FullyQualifiedTableName "default_db" "dwh" "bar"))
-        , testHive "ALTER TABLE foo PARTITION (a = '2017-02-21') SET LOCATION 'hdfs://nameservice1/app/dwh/foo/datestr=2017-02-21_201702222317';" defaultTestCatalog
-              (@=? (M.singleton (FullyQualifiedTableName "default_db" "public" "foo") $ S.singleton $ FullyQualifiedTableName "default_db" "etltmp" "stg_dwh_foo"))
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/user/hive/warehouse/OTHER_DB.db/OTHER_TABLE';" defaultTestCatalog
-              (@=? (M.singleton (FullyQualifiedTableName "default_db" "public" "foo") $ S.singleton $ FullyQualifiedTableName "default_db" "OTHER_DB" "OTHER_TABLE"))
-        , testHive "ALTER TABLE foo SET LOCATION 'something we dont have a pattern for';" defaultTestCatalog (@=? M.empty)
-        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://nameservice1/app/dwh/bar/';" defaultTestCatalog (@=? M.empty)  -- note the trailing '/', breaks the regex
+        , testHive "ALTER TABLE foo SET LOCATION 'hdfs://some/random/path';" defaultTestCatalog (@=? M.empty)
         , testVertica "ALTER PROJECTION foo RENAME TO bar;" defaultTestCatalog (@=? M.empty)
 
         , testAll "GRANT SELECT ON foo TO bar;" defaultTestCatalog (@=? M.empty)
