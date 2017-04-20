@@ -1,0 +1,153 @@
+name:                queryparser-test
+
+-- The package version.  See the Haskell package versioning policy (PVP)
+-- for standards guiding when and how versions should be incremented.
+-- http://www.haskell.org/haskellwiki/Package_versioning_policy
+-- PVP summary:      +-+------- breaking API changes
+--                   | | +----- non-breaking API additions
+--                   | | | +--- code changes with no API change
+version:             0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- The license under which the package is released.
+license:             MIT
+
+-- The file containing the license text.
+license-file:        LICENSE
+
+-- The package author(s).
+author:              Heli Wang, David Thomas, Matt Halverson
+
+-- An email address to which users can send suggestions, bug reports, and
+-- patches.
+maintainer:          heli@uber.com
+
+-- A copyright notice.
+-- copyright:
+
+category:            Database
+
+build-type:          Simple
+
+-- Extra files to be distributed with the package, such as examples or a
+-- README.
+-- extra-source-files:
+
+-- Constraint on the version of Cabal needed to build this package.
+cabal-version:       >=1.10
+
+library
+  other-modules:       Database.Sql.Position.Test
+                     , Database.Sql.Info.Test
+                     , Database.Sql.Pretty.Test
+                     , Database.Sql.Vertica.Scanner.Test
+                     , Database.Sql.Vertica.Parser.Test
+                     , Database.Sql.Hive.Scanner.Test
+                     , Database.Sql.Hive.Parser.Test
+                     , Database.Sql.Presto.Scanner.Test
+                     , Database.Sql.Presto.Parser.Test
+                     , Database.Sql.Util.Eval.Test
+                     , Database.Sql.Util.Joins.Test
+                     , Database.Sql.Util.Json.Test
+                     , Database.Sql.Util.Lineage.Table.Test
+                     , Database.Sql.Util.Lineage.ColumnPlus.Test
+                     , Database.Sql.Util.Schema.Test
+                     , Database.Sql.Util.Scope.Test
+                     , Database.Sql.Util.Tables.Test
+                     , Database.Sql.Util.Test
+                     , Database.Sql.Util.Catalog
+                     , Database.Sql.Util.Catalog.Test
+                     , Database.Sql.Util.Columns.Test
+                     , Test.HUnit.Ticket
+  build-depends:       base >=4.8 && <4.9
+                     , queryparser
+                     , queryparser-vertica
+                     , aeson >= 0.8
+                     , containers
+                     , hashable
+                     , mtl >= 2.2 && < 2.3
+                     , parsec >= 3.1 && < 3.2
+                     , semigroups >= 0.16
+                     , text >=1.2 && <1.3
+                     , unordered-containers
+                     , file-location
+                     , hpc
+                     , HUnit >= 1.2 && < 1.4
+                     , template-haskell
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-quickcheck2
+                     , QuickCheck
+                     , syb
+  hs-source-dirs:      .
+
+  ghc-options: -Wall -Werror -with-rtsopts=-M5M
+
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , LambdaCase
+                     , RecordWildCards
+                     , TupleSections
+                     , ConstraintKinds
+                     , FlexibleInstances
+
+test-suite queryparser-test-suite
+  type:                exitcode-stdio-1.0
+  main-is:             Tests.hs
+  other-modules:       Database.Sql.Position.Test
+                     , Database.Sql.Info.Test
+                     , Database.Sql.Pretty.Test
+                     , Database.Sql.Vertica.Scanner.Test
+                     , Database.Sql.Vertica.Parser.Test
+                     , Database.Sql.Hive.Scanner.Test
+                     , Database.Sql.Hive.Parser.Test
+                     , Database.Sql.Presto.Scanner.Test
+                     , Database.Sql.Presto.Parser.Test
+                     , Database.Sql.Util.Eval.Test
+                     , Database.Sql.Util.Joins.Test
+                     , Database.Sql.Util.Json.Test
+                     , Database.Sql.Util.Lineage.Table.Test
+                     , Database.Sql.Util.Lineage.ColumnPlus.Test
+                     , Database.Sql.Util.Schema.Test
+                     , Database.Sql.Util.Scope.Test
+                     , Database.Sql.Util.Test
+                     , Database.Sql.Util.Catalog
+                     , Database.Sql.Util.Catalog.Test
+                     , Database.Sql.Util.Columns.Test
+                     , Test.HUnit.Ticket
+  build-depends:       base >=4.8 && <4.9
+                     , queryparser-test
+                     , queryparser
+                     , queryparser-vertica
+                     , aeson >= 0.8
+                     , containers
+                     , hashable
+                     , mtl >= 2.2 && < 2.3
+                     , parsec >= 3.1 && < 3.2
+                     , semigroups >= 0.16
+                     , text >=1.2 && <1.3
+                     , unordered-containers
+                     , file-location
+                     , hpc
+                     , HUnit >= 1.2 && < 1.4
+                     , template-haskell
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-quickcheck2
+                     , QuickCheck
+                     , syb
+  hs-source-dirs:      .
+  ghc-options: -Wall -Werror -with-rtsopts=-M5M
+
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , LambdaCase
+                     , RecordWildCards
+                     , TupleSections
+                     , ConstraintKinds
+                     , FlexibleInstances
