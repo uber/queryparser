@@ -88,7 +88,6 @@ library
   -- Modules included in this library but not exported.
   other-modules:       Data.Maybe.More
                      , Data.Functor.Identity.Orphans
-                     , Demo
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
