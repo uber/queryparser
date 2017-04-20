@@ -1,4 +1,4 @@
-name:                queryparser
+name:                queryparser-presto
 
 -- The package version.  See the Haskell package versioning policy (PVP)
 -- for standards guiding when and how versions should be incremented.
@@ -44,30 +44,15 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Database.Sql.Position
-                     , Database.Sql.Helpers
-                     , Database.Sql.Info
-                     , Database.Sql.Type
-                     , Database.Sql.Type.Names
-                     , Database.Sql.Type.Query
-                     , Database.Sql.Type.Schema
-                     , Database.Sql.Type.Scope
-                     , Database.Sql.Type.TableProps
-                     , Database.Sql.Type.Unused
-                     , Database.Sql.Pretty
-                     , Database.Sql.Util.Columns
-                     , Database.Sql.Util.Eval
-                     , Database.Sql.Util.Eval.Concrete
-                     , Database.Sql.Util.Joins
-                     , Database.Sql.Util.Scope
-                     , Database.Sql.Util.Tables
-                     , Database.Sql.Util.Lineage.Table
-                     , Database.Sql.Util.Lineage.ColumnPlus
-                     , Database.Sql.Util.Schema
+  exposed-modules:     Database.Sql.Presto.Parser
+                     , Database.Sql.Presto.Parser.Token
+                     , Database.Sql.Presto.Scanner
+                     , Database.Sql.Presto.Token
+                     , Database.Sql.Presto.Type
+                     , Database.Sql.Presto.Parser.Internal
 
   -- Modules included in this library but not exported.
-  other-modules:       Data.Maybe.More
-                     , Data.Functor.Identity.Orphans
+  -- other-modules:     
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
@@ -80,6 +65,7 @@ library
   build-depends:       base >=4.8 && <4.9
                      , text >=1.2 && <1.3
                      , bytestring
+                     , queryparser
                      , containers
                      , semigroups >= 0.16
                      , mtl >= 2.2 && < 2.3
@@ -90,6 +76,7 @@ library
                      , unordered-containers
                      , hashable
                      , QuickCheck
+                     , regex-tdfa
                      , fixed-list
                      , predicate-class
 
@@ -101,22 +88,3 @@ library
 
   -- Base language which the package is written in.
   default-language:    Haskell2010
-
-benchmark queryparser-bench
-  type:                exitcode-stdio-1.0
-  main-is:             Bench.hs
-  build-depends:       base >=4.8 && <4.9
-                     , queryparser
-                     , criterion
-                     , text
-  hs-source-dirs:      bench
-
-  ghc-options: -Wall -Werror -with-rtsopts=-M5M
-
-  default-language:    Haskell2010
-  default-extensions:  OverloadedStrings
-                     , LambdaCase
-                     , RecordWildCards
-                     , TupleSections
-                     , ConstraintKinds
-                     , FlexibleInstances
