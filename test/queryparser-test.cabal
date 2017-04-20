@@ -67,6 +67,8 @@ library
   build-depends:       base >=4.8 && <4.9
                      , queryparser
                      , queryparser-vertica
+                     , queryparser-hive
+                     , queryparser-presto
                      , aeson >= 0.8
                      , containers
                      , hashable
@@ -124,6 +126,8 @@ test-suite queryparser-test-suite
                      , queryparser-test
                      , queryparser
                      , queryparser-vertica
+                     , queryparser-hive
+                     , queryparser-presto
                      , aeson >= 0.8
                      , containers
                      , hashable

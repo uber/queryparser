@@ -10,6 +10,8 @@ packages:
 - 'demo'
 - 'misc/predicate-class'
 - 'dialects/vertica'
+- 'dialects/hive'
+- 'dialects/presto'
 
 docker:
     enable: true
