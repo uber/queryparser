@@ -6,8 +6,10 @@ resolver: lts-6.29
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
+- 'test'
 - 'demo'
 - 'misc/predicate-class'
+- 'dialects/vertica'
 
 docker:
     enable: true

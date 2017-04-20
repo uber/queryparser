@@ -18,6 +18,8 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
+module Main where
+
 import qualified Database.Sql.Vertica.Parser.Test
 import qualified Database.Sql.Vertica.Scanner.Test
 import qualified Database.Sql.Hive.Parser.Test
