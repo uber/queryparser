@@ -6,6 +6,7 @@ resolver: lts-6.29
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
+- 'misc/predicate-class'
 
 docker:
     enable: true

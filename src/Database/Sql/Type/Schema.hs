@@ -39,7 +39,7 @@ import Data.Functor.Identity
 import qualified Data.HashMap.Strict as HMS
 
 import Data.Maybe (mapMaybe, maybeToList)
-import Data.Predicate
+import Data.Predicate.Class
 
 
 overWithColumns :: (r a -> s a) -> WithColumns r a -> WithColumns s a

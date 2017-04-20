@@ -18,7 +18,7 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
-module Data.Predicate where
+module Data.Predicate.Class where
 import Prelude hiding ((&&), (||), not)
 import qualified Prelude
 class Predicate p where

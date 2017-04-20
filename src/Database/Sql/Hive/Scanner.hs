@@ -37,7 +37,7 @@ import Control.Monad.State
 import Database.Sql.Position
 import Database.Sql.Hive.Token
 
-import Data.Predicate
+import Data.Predicate.Class
 
 
 isWordBody :: Char -> Bool

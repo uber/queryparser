@@ -38,7 +38,7 @@ import Data.Int (Int64)
 import Database.Sql.Position
 import Database.Sql.Presto.Token
 
-import Data.Predicate
+import Data.Predicate.Class
 
 import Numeric (readHex)
 
