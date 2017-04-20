@@ -36,7 +36,7 @@ import Data.Char (isAlphaNum, isAlpha, isSpace, isDigit)
 import Database.Sql.Position
 import Database.Sql.Vertica.Token
 
-import Data.Predicate
+import Data.Predicate.Class
 
 import Numeric (readHex, readOct)
 

@@ -86,8 +86,7 @@ library
                      , Database.Sql.Util.Schema
 
   -- Modules included in this library but not exported.
-  other-modules:       Data.Predicate
-                     , Data.Maybe.More
+  other-modules:       Data.Maybe.More
                      , Data.Functor.Identity.Orphans
                      , Demo
 
@@ -113,6 +112,7 @@ library
                      , hashable
                      , QuickCheck
                      , fixed-list
+                     , predicate-class
 
   -- Directories containing source files.
   hs-source-dirs:      src

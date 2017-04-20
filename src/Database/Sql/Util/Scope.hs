@@ -42,7 +42,7 @@ module Database.Sql.Util.Scope
     ) where
 
 import Prelude hiding ((&&), (||), not)
-import Data.Predicate
+import Data.Predicate.Class
 import Data.Maybe (mapMaybe)
 import Data.Maybe.More (overJust)
 import Data.Either (lefts, rights)
