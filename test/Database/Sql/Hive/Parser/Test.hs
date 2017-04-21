@@ -445,6 +445,10 @@ testParser_hiveSuite = test
         ]
       , "ALTER TABLE foo.bar PARTITION(baz) ADD COLUMNS (quux1 int, quux2 int);"
       , "SELECT stack(4, 'a', 364, 'b', 42, 'c', 7, 'd', 1) AS (col1, col2);"
+      , "CREATE FUNCTION foo.bar AS 'class' USING JAR 'hdfs:///path';"
+      , "CREATE TEMPORARY FUNCTION foo AS 'class';"
+      , "DROP FUNCTION foo;"
+      , "DROP TEMPORARY FUNCTION foo;"
       ]
 
     , "Parse failure on malformed HiveQL statements" ~: map (TestCase . parsesUnsuccessfully)

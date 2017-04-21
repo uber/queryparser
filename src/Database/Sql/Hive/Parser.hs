@@ -82,6 +82,12 @@ statementParser = do
         , try $ HiveTruncatePartitionStmt <$> truncatePartitionStatementP
         , HiveUnhandledStatement <$> describeP
         , HiveUnhandledStatement <$> showP
+        , do
+              _ <- try $ P.lookAhead createFunctionPrefixP
+              HiveUnhandledStatement <$> createFunctionP
+        , do
+              _ <- try $ P.lookAhead dropFunctionPrefixP
+              HiveUnhandledStatement <$> dropFunctionP
         , HiveStandardSqlStatement <$> statementP
         , try $ HiveAlterTableSetLocationStmt <$> alterTableSetLocationP
         , try $ HiveUnhandledStatement <$> alterTableSetTblPropertiesP
@@ -364,6 +370,33 @@ showP = do
     e <- P.many1 Tok.notSemicolonP
     return $ s <> last e
 
+
+createFunctionPrefixP :: Parser Range
+createFunctionPrefixP = do
+    s <- Tok.createP
+    optional Tok.temporaryP
+    e <- Tok.functionP
+    return $ s <> e
+
+createFunctionP :: Parser Range
+createFunctionP = do
+   s <- createFunctionPrefixP
+   e <- P.many1 Tok.notSemicolonP
+   return $ s <> last e
+
+
+dropFunctionPrefixP :: Parser Range
+dropFunctionPrefixP = do
+    s <- Tok.dropP
+    optional Tok.temporaryP
+    e <- Tok.functionP
+    return $ s <> e
+
+dropFunctionP :: Parser Range
+dropFunctionP = do
+   s <- dropFunctionPrefixP
+   e <- P.many1 Tok.notSemicolonP
+   return $ s <> last e
 
 alterTableSetLocationP :: Parser (AlterTableSetLocation RawNames Range)
 alterTableSetLocationP = do
