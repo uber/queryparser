@@ -549,6 +549,9 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (VerticaStatement r a)
         , "info" .= info
         ]
 
+typeExample :: ()
+typeExample = const () $ toJSON (undefined :: VerticaStatement ResolvedNames Range)
+
 instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (CreateProjection r a) where
     toJSON CreateProjection{..} = JSON.object
         [ "tag" .= JSON.String "CreateProjection"

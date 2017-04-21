@@ -110,6 +110,9 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (PrestoStatement r a) 
         , "info" .= info
         ]
 
+typeExample :: ()
+typeExample = const () $ toJSON (undefined :: PrestoStatement ResolvedNames Range)
+
 instance HasTables (PrestoStatement ResolvedNames a) where
     goTables (PrestoStandardSqlStatement s) = goTables s
     goTables (PrestoUnhandledStatement _) = return ()
