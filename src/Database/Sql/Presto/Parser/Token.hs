@@ -625,6 +625,9 @@ usingP = keywordP "using"
 valuesP :: Parser Range
 valuesP = keywordP "values"
 
+viewP :: Parser Range
+viewP = keywordP "view"
+
 whenP :: Parser Range
 whenP = keywordP "when"
 
