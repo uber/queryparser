@@ -41,6 +41,7 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Writer
 
+import           Data.Aeson
 import qualified Data.HashMap.Strict as HMS
 import           Data.HashMap.Strict (HashMap)
 
@@ -314,3 +315,55 @@ instance Arbitrary DatabaseMap where
 instance Arbitrary CatalogMap where
     arbitrary = HMS.fromList <$> arbitrary
     shrink = shrinkHashMap
+
+instance ToJSON a => ToJSON (RTableRef a) where
+    toJSON (RTableRef fqtn _) = object
+        [ "tag" .= String "RTableRef"
+        , "fqtn" .= fqtn
+        ]
+    toJSON (RTableAlias alias) = object
+        [ "tag" .= String "RTableAlias"
+        , "alias" .= alias
+        ]
+
+instance ToJSON a => ToJSON (RTableName a) where
+    toJSON (RTableName fqtn _) = object
+        [ "tag" .= String "RTableName"
+        , "fqtn" .= fqtn
+        ]
+
+instance ToJSON a => ToJSON (RDropTableName a) where
+    toJSON (RDropExistingTableName fqtn _) = object
+        [ "tag" .= String "RDropExistingTableName"
+        , "fqtn" .= fqtn
+        ]
+    toJSON (RDropMissingTableName oqtn) = object
+        [ "tag" .= String "RDropMissingTableName"
+        , "oqtn" .= oqtn
+        ]
+
+instance ToJSON a => ToJSON (RCreateTableName a) where
+    toJSON (RCreateTableName fqtn existence) = object
+        [ "tag" .= String "RCreateTableName"
+        , "fqtn" .= fqtn
+        , "existence" .= existence
+        ]
+
+instance ToJSON a => ToJSON (RCreateSchemaName a) where
+    toJSON (RCreateSchemaName fqsn existence) = object
+        [ "tag" .= String "RCreateSchemaName"
+        , "fqsn" .= fqsn
+        , "existence" .= existence
+        ]
+
+instance ToJSON a => ToJSON (StarColumnNames a) where
+    toJSON (StarColumnNames cols) = object
+        [ "tag" .= String "StarColumnNames"
+        , "cols" .= cols
+        ]
+
+instance ToJSON a => ToJSON (ColumnAliasList a) where
+    toJSON (ColumnAliasList cols) = object
+        [ "tag" .= String "ColumnAliasList"
+        , "cols" .= cols
+        ]

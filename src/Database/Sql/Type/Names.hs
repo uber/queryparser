@@ -470,6 +470,19 @@ instance ToJSON a => ToJSON (TableAlias a) where
         , "ident" .= ident
         ]
 
+instance ToJSON a => ToJSON (RNaturalColumns a) where
+    toJSON (RNaturalColumns cols) = object
+        [ "tag" .= String "RNaturalColumns"
+        , "cols" .= cols
+        ]
+
+instance ToJSON a => ToJSON (RUsingColumn a) where
+    toJSON (RUsingColumn left right) = object
+        [ "tag" .= String "RUsingColumn"
+        , "left" .= left
+        , "right" .= right
+        ]
+
 instance (ToJSON (f (QSchemaName f a)), ToJSON a) => ToJSON (QFunctionName f a) where
     toJSON (QFunctionName info schema function) = object
         [ "tag" .= String "QFunctionName"

@@ -347,6 +347,9 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (HiveStatement r a) wh
         , "info" .= info
         ]
 
+typeExample :: ()
+typeExample = const () $ toJSON (undefined :: HiveStatement ResolvedNames Range)
+
 instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (InsertDirectory r a) where
     toJSON stmt = object
         [ "tag" .= String "InsertDirectory"

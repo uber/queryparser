@@ -76,6 +76,10 @@ instance ToJSON a => ToJSON (Externality a) where
 
     toJSON Internal = object ["tag" .= String "Internal"]
 
+instance ToJSON Existence where
+    toJSON Exists = object ["tag" .= String "Exists"]
+    toJSON DoesNotExist = object ["tag" .= String "DoesNotExist"]
+
 instance ToJSON TableType where
     toJSON Table = object ["tag" .= String "Table"]
     toJSON View = object ["tag" .= String "View"]
@@ -100,6 +104,17 @@ instance FromJSON a => FromJSON (Externality a) where
 
     parseJSON v = fail $ unwords
         [ "don't know how to parse as Externality:"
+        , show v
+        ]
+
+instance FromJSON Existence where
+    parseJSON (Object o) = o .: "tag" >>= \case
+        String "Exists" -> pure Exists
+        String "DoesNotExist" -> pure DoesNotExist
+        _ -> fail "unrecognized tag on Existence object"
+
+    parseJSON v = fail $ unwords
+        [ "don't know how to parse as Existence:"
         , show v
         ]
 
