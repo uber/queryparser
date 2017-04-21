@@ -119,6 +119,9 @@ statementP :: Parser (Statement Presto RawNames Range)
 statementP = choice
     [ QueryStmt <$> queryP
     , DeleteStmt <$> deleteP
+    , do
+          _ <- try $ P.lookAhead dropViewPrefixP
+          DropViewStmt <$> dropViewP
     , DropTableStmt <$> dropTableP
     , GrantStmt <$> grantP
     , RevokeStmt <$> revokeP
@@ -1430,6 +1433,22 @@ deleteP = do
         info = r <> r'
 
     pure $ Delete info table maybeExpr
+
+
+dropViewPrefixP :: Parser Range
+dropViewPrefixP = do
+    s <- Tok.dropP
+    e <- Tok.viewP
+    pure $ s <> e
+
+dropViewP :: Parser (DropView RawNames Range)
+dropViewP = do
+    s <- dropViewPrefixP
+    dropViewIfExists <- optionMaybe ifExistsP
+    dropViewName <- tableNameP
+
+    let dropViewInfo = s <> getInfo dropViewName
+    pure DropView{..}
 
 
 dropTableP :: Parser (DropTable RawNames Range)

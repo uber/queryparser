@@ -323,6 +323,10 @@ testParser = test
         , "INSERT INTO foo.bar VALUES ('null', timestamp '2016-12-12 16:12:09.207'), (1, false);"
         , "INSERT INTO orders SELECT * FROM new_orders;"
         , "INSERT INTO nation (nationkey, name, regionkey, comment) VALUES (26, 'POLAND', 3, 'no comment');"
+
+        -- test DROP VIEW
+        , "DROP VIEW foo;"
+        , "DROP VIEW IF EXISTS foo;"
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)
