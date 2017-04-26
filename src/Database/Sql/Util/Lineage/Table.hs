@@ -76,7 +76,7 @@ tableLineage (InsertStmt Insert{insertTable = RTableName tableName _, ..}) = cas
       -- the data in the table changed,
       -- but we can't know anything about its provenance :-/
     InsertSelectValues query ->
-        let sources = S.insert fqtn $ S.map mkFQTN $ getTables query
+        let sources = S.insert fqtn $ getTables query
             ancestry = M.singleton fqtn sources
          in filterByInsertBehavior ancestry
    where
@@ -93,10 +93,10 @@ tableLineage (InsertStmt Insert{insertTable = RTableName tableName _, ..}) = cas
 tableLineage (UpdateStmt Update{..}) =
     let RTableName table _ = updateTable
         fqtn = mkFQTN table
-        sources = S.insert fqtn $ S.map mkFQTN $ S.unions [ getTables updateFrom
-                                                          , getTables updateSetExprs
-                                                          , getTables updateWhere
-                                                          ]
+        sources = S.insert fqtn $ S.unions [ getTables updateFrom
+                                           , getTables updateSetExprs
+                                           , getTables updateWhere
+                                           ]
      in M.singleton fqtn sources
 
 tableLineage (DeleteStmt (Delete _ (RTableName table _) maybeExpr)) = case maybeExpr of
@@ -105,7 +105,7 @@ tableLineage (DeleteStmt (Delete _ (RTableName table _) maybeExpr)) = case maybe
     -- otherwise, the contents after a delete depend on the contents before the
     -- delete, so `table` will be its own ancestor.
     Just expr ->
-        let sources = S.insert fqtn $ S.map mkFQTN $ getTables expr
+        let sources = S.insert fqtn $ getTables expr
          in M.singleton fqtn sources
     where fqtn = mkFQTN table
 
@@ -115,7 +115,7 @@ tableLineage (TruncateStmt (Truncate _ (RTableName table _))) =
 tableLineage (CreateTableStmt CreateTable{createTableName = RCreateTableName tableName _, ..}) = case createTableDefinition of
     TableColumns _ _ -> emptyLineage fqtn
     TableLike _ _ -> emptyLineage fqtn
-    TableAs _ _ query -> M.singleton fqtn $ S.map mkFQTN $ getTables query
+    TableAs _ _ query -> M.singleton fqtn $ getTables query
     TableNoColumnInfo _ -> emptyLineage fqtn
   where
     fqtn = mkFQTN tableName

@@ -76,10 +76,10 @@ parseAndResolve sql = case runResolverWarn (resolveVerticaStatement $ parse sql)
 demoTablesAccessed :: TL.Text -> Doc
 demoTablesAccessed sql = draw $ getTables $ fst $ parseAndResolve sql
   where
-    draw :: S.Set (FQTableName ()) -> Doc
+    draw :: S.Set FullyQualifiedTableName -> Doc
     draw xs = case S.toList xs of
                   [] -> text "no tables accessed"
-                  xs' -> vcat $ map (drawFQTN . fqtnToFQTN) xs'
+                  xs' -> vcat $ map drawFQTN xs'
 
 demoColumnsAccessedByClause :: TL.Text -> Doc
 demoColumnsAccessedByClause sql = draw $ getColumns $ fst $ parseAndResolve sql

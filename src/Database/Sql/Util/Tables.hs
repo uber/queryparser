@@ -46,11 +46,11 @@ import           Database.Sql.Position
 
 
 
-getTables :: HasTables q => q -> Set (FQTableName ())
+getTables :: HasTables q => q -> Set (FullyQualifiedTableName)
 getTables = execWriter . goTables
 
 class HasTables q where
-    goTables :: q -> Writer (Set (FQTableName ())) ()
+    goTables :: q -> Writer (Set FullyQualifiedTableName) ()
 
 -- Note that vertica and hive statements have their own table usage instances
 -- in their type file. Changes made here should also reflect there.
@@ -96,8 +96,8 @@ instance HasTables (Select ResolvedNames a) where
         ]
 
 
-emitTable :: MonadWriter (Set (FQTableName ())) m => FQTableName a -> m ()
-emitTable = tell . S.singleton . void
+emitTable :: MonadWriter (Set FullyQualifiedTableName) m => FQTableName a -> m ()
+emitTable = tell . S.singleton . fqtnToFQTN
 
 instance (HasTables a, HasTables b) => HasTables (a, b) where
     goTables (a, b) = goTables a >> goTables b
