@@ -142,6 +142,7 @@ test-suite queryparser-test
                      , Database.Sql.Util.Lineage.ColumnPlus.Test
                      , Database.Sql.Util.Schema.Test
                      , Database.Sql.Util.Scope.Test
+                     , Database.Sql.Util.Tables.Test
                      , Database.Sql.Util.Test
                      , Database.Sql.Util.Catalog
                      , Database.Sql.Util.Catalog.Test
