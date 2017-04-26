@@ -35,6 +35,7 @@ import qualified Database.Sql.Util.Lineage.Table.Test
 import qualified Database.Sql.Util.Lineage.ColumnPlus.Test
 import qualified Database.Sql.Util.Schema.Test
 import qualified Database.Sql.Util.Scope.Test
+import qualified Database.Sql.Util.Tables.Test
 import qualified Database.Sql.Util.Catalog.Test
 import qualified Test.Framework.Providers.API as TestFramework
 import qualified Test.Framework.Runners.Console as Test
@@ -57,6 +58,7 @@ hunitTests = Test.hUnitTestToTests $ HU.TestList
     , Database.Sql.Util.Lineage.Table.Test.tests
     , Database.Sql.Util.Lineage.ColumnPlus.Test.tests
     , Database.Sql.Util.Schema.Test.tests
+    , Database.Sql.Util.Tables.Test.tests
     , Database.Sql.Vertica.Scanner.Test.tests
     , Database.Sql.Vertica.Parser.Test.tests
     , Database.Sql.Hive.Scanner.Test.tests
