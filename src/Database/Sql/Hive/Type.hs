@@ -428,7 +428,7 @@ instance HasTables (HiveStatement ResolvedNames a) where
   goTables (HiveInsertDirectoryStmt s) = goTables s
   goTables (HiveTruncatePartitionStmt s) = goTables s
   goTables (HiveAlterTableSetLocationStmt s) = goTables s
-  goTables (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ (RTableName fqtn _) _ _)) = tell $ S.singleton $ fqtnToFQTN fqtn
+  goTables (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ (RTableName fqtn _) _ _)) = tell $ S.singleton $ TableUse WriteMeta $ fqtnToFQTN fqtn
   goTables (HiveUnhandledStatement _) = return ()
 
 instance HasTables (InsertDirectory ResolvedNames a) where

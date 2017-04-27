@@ -39,18 +39,33 @@ import qualified Data.Text.Lazy as TL
 
 import           Control.Monad.Identity
 import           Control.Monad.Writer
+import           Control.Monad.Reader
 import           Control.Monad.State
 
 import           Database.Sql.Type
 import           Database.Sql.Position
 
 
+-- This describes the usage of a particular table, whether it was read from or
+-- written to. Note that if a table is used in both modes, it will show up
+-- twice as each mode.
+data UsageMode = ReadData | ReadMeta | WriteData | WriteMeta | Unknown
+  deriving (Show, Eq, Ord)
 
-getTables :: HasTables q => q -> Set (FullyQualifiedTableName)
-getTables = execWriter . goTables
+data TableUse = TableUse UsageMode FullyQualifiedTableName
+  deriving (Show, Eq, Ord)
+
+
+getTables :: HasTables q => q -> Set FullyQualifiedTableName
+getTables = S.map tableFromUsage . getUsages
+  where
+   tableFromUsage (TableUse _ t) = t
+
+getUsages :: HasTables q => q -> Set TableUse
+getUsages = execWriter . flip runReaderT Unknown . goTables
 
 class HasTables q where
-    goTables :: q -> Writer (Set FullyQualifiedTableName) ()
+    goTables :: q -> ReaderT UsageMode (Writer (Set TableUse)) ()
 
 -- Note that vertica and hive statements have their own table usage instances
 -- in their type file. Changes made here should also reflect there.
@@ -96,8 +111,12 @@ instance HasTables (Select ResolvedNames a) where
         ]
 
 
-emitTable :: MonadWriter (Set FullyQualifiedTableName) m => FQTableName a -> m ()
-emitTable = tell . S.singleton . fqtnToFQTN
+emitTable :: (MonadWriter (Set TableUse) m,
+              MonadReader UsageMode m)
+          => FQTableName a -> m ()
+emitTable t = do
+  r <- ask
+  tell . S.singleton $ TableUse r $ fqtnToFQTN t
 
 instance (HasTables a, HasTables b) => HasTables (a, b) where
     goTables (a, b) = goTables a >> goTables b
@@ -116,7 +135,7 @@ instance HasTables (SelectColumns ResolvedNames a) where
     goTables (SelectColumns _ columns) = mapM_ goTables columns
 
 instance HasTables (SelectFrom ResolvedNames a) where
-    goTables (SelectFrom _ tablishes) = mapM_ goTables tablishes
+    goTables (SelectFrom _ tablishes) = local (\_ -> ReadData) $ mapM_ goTables tablishes
 
 instance HasTables (SelectWhere ResolvedNames a) where
     goTables (SelectWhere _ condition) = goTables condition
@@ -163,7 +182,7 @@ instance HasTables (Selection ResolvedNames a) where
 
 instance HasTables (Insert ResolvedNames a) where
     goTables Insert{..} = do
-        goTables insertTable
+        local (\_ -> WriteData) $ goTables insertTable
         goTables insertValues
 
 instance HasTables (InsertValues ResolvedNames a) where
@@ -185,20 +204,20 @@ instance HasTables a => HasTables (Maybe a) where
 
 instance HasTables (Update ResolvedNames a) where
     goTables Update{..} = do
-        goTables updateTable
-        goTables updateSetExprs
-        goTables updateFrom
+        local (\_ -> WriteData) $ goTables updateTable
+        local (\_ -> ReadData) $ goTables updateSetExprs
+        local (\_ -> ReadData) $ goTables updateFrom
         goTables updateWhere
 
 instance HasTables (Delete ResolvedNames a) where
     goTables (Delete _ table expr) = do
-        goTables table
+        local (\_ -> WriteData) $ goTables table
         goTables expr
 
 instance HasTables (CreateTable d ResolvedNames a) where
     goTables CreateTable{createTableName = RCreateTableName table _, ..} = do
         -- TODO handle createTableExtra, and the dialect instances
-        emitTable table
+        local (\_ -> WriteData) $ emitTable table
         goTables createTableDefinition
 
 instance HasTables (TableDefinition d ResolvedNames a) where
@@ -215,29 +234,36 @@ instance HasTables (ColumnDefinition d ResolvedNames a) where
     goTables ColumnDefinition{..} = goTables columnDefinitionDefault
 
 instance HasTables (Truncate ResolvedNames a) where
-    goTables (Truncate _ tn) = goTables tn
+    goTables (Truncate _ tn) = local (\_ -> WriteData) $ goTables tn
 
 instance HasTables (AlterTable ResolvedNames a) where
-    goTables (AlterTableRenameTable _ tl tr) = mapM_ goTables [tl, tr]
-    goTables (AlterTableRenameColumn _ t _ _) = goTables t
-    goTables (AlterTableAddColumns _ t _) = goTables t
+    goTables (AlterTableRenameTable _ tl tr) = do
+      -- Since renaming table both reads and writes (drops) the source,
+      -- we report twice.
+      local (\_ -> ReadData) $ goTables tl
+      local (\_ -> WriteData) $ goTables tl
+      local (\_ -> WriteData) $ goTables tr
+    goTables (AlterTableRenameColumn _ t _ _) =
+      local (\_ -> WriteMeta) $ goTables t
+    goTables (AlterTableAddColumns _ t _) =
+      local (\_ -> WriteData) $ goTables t
 
 instance HasTables (DropTable ResolvedNames a) where
     goTables DropTable{dropTableNames = tables} =
       mapM_
       (\case
-          RDropExistingTableName table _ -> emitTable table
+          RDropExistingTableName table _ -> local (\_ -> WriteData) $ emitTable table
           RDropMissingTableName _ -> pure ()
       )
       tables
 
 instance HasTables (CreateView ResolvedNames a) where
     goTables CreateView{createViewName = RCreateTableName view _, ..} = do
-        emitTable view
+        local (\_ -> WriteMeta) $ emitTable view
         goTables createViewQuery
 
 instance HasTables (DropView ResolvedNames a) where
-    goTables DropView{dropViewName = RDropExistingTableName view _} = emitTable view
+    goTables DropView{dropViewName = RDropExistingTableName view _} = local (\_ -> WriteMeta) $ emitTable view
     goTables DropView{dropViewName = RDropMissingTableName _} = pure ()
 
 instance HasTables (Tablish ResolvedNames a) where
