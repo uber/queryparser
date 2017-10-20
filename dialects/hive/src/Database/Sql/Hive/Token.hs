@@ -86,7 +86,7 @@ wordInfo word = maybe (WordInfo True True True True) id $ M.lookup word $ M.from
     , ("left",                 WordInfo False False False True)
     , ("limit",                WordInfo False False False False)
     , ("localtimestamp",       WordInfo False False False False)
-    , ("localtime",            WordInfo False True  False False)
+    , ("localtime",            WordInfo False True  True False)
     , ("map",                  WordInfo False False False True)
     , ("not",                  WordInfo False False False False)
     , ("null",                 WordInfo False False False False)

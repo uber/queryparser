@@ -1402,6 +1402,7 @@ testParser = test
         , "SELECT a + b, SUM(c) FROM foo GROUP BY a + b GROUPING SETS (a + b);"
         , "SELECT a, b, SUM(c) FROM foo GROUP BY a, b WITH CUBE;"
         , "SELECT a, b, SUM(c) FROM foo GROUP BY a, b WITH ROLLUP;"
+        , "SELECT foo AS localtime FROM potato;"
         , "CREATE TABLE blah AS SELECT 1;"
         , "CREATE TABLE blah AS WITH foo AS (SELECT 1) SELECT * FROM foo;"
         , "CREATE TABLE blah LIKE qux;"
