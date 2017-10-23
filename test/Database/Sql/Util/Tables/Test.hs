@@ -47,6 +47,14 @@ testTableUsage = test
           )
         , testAll "WITH x AS (SELECT * FROM potato) SELECT * FROM x;" defaultTestCatalog
           (@?= (S.singleton $ tu ReadData "default_db" "public" "potato"))
+        , testHive "SELECT `public.potato`.x FROM potato;" defaultTestCatalog
+          (@?= (S.singleton $ tu ReadData "default_db" "public" "potato"))
+        , testHive "SELECT `public.potato`.* from potato;" defaultTestCatalog
+          (@?= (S.singleton $ tu ReadData "default_db" "public" "potato"))
+        , testHive "SELECT `special.mytable`.i FROM special.mytable;" defaultTestCatalog
+          (@?= (S.singleton $ tu ReadData "default_db" "special" "mytable"))
+        , testHive "SELECT i FROM `special.mytable`;" defaultTestCatalog
+          (@?= (S.singleton $ tu ReadData "default_db" "special" "mytable"))
         ]
 
       , "Generate table usages for DML queries" ~:
@@ -99,6 +107,8 @@ testTableUsage = test
              , tu ReadData "default_db" "public" "potato"
              ]
             )
+          , testHive "CREATE TABLE `temp.potato` (int a);" defaultTestCatalog
+            (@?= (S.singleton $ tu WriteData "default_db" "temp" "potato"))
           , testVertica "CREATE TABLE temp.potato (int a);" defaultTestCatalog
             (@?= (S.singleton $ tu WriteData "default_db" "temp" "potato"))
           , testVertica "CREATE TABLE temp.potato AS SELECT * FROM potato;" defaultTestCatalog
@@ -174,6 +184,9 @@ publicSchema = mkNormalSchema "public" ()
 tempSchema :: UQSchemaName ()
 tempSchema = mkNormalSchema "temp" ()
 
+specialSchema :: UQSchemaName ()
+specialSchema = mkNormalSchema "special" ()
+
 defaultTestCatalog :: Catalog
 defaultTestCatalog = makeCatalog
     ( HMS.singleton defaultDatabase $ HMS.fromList
@@ -198,6 +211,17 @@ defaultTestCatalog = makeCatalog
           )
         , ( tempSchema
           , HMS.empty
+          )
+        , ( specialSchema
+          , HMS.fromList
+            [ ( QTableName () None "mytable"
+              , persistentTable
+                [ QColumnName () None "i"
+                , QColumnName () None "j"
+                , QColumnName () None "k"
+                ]
+              )
+            ]
           )
         ]
     )

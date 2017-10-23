@@ -64,6 +64,21 @@ testTokenizer =
                                             , Position 1 10 10 )]
              ],
 
+      "Even in the special hive table case. We handle that in the parser"
+      ~: test[ tokenize "`tmp.potato`" ~?= [ ( TokWord True "tmp.potato"
+                                             , Position 1 0 0
+                                             , Position 1 12 12)]
+             , tokenize "tmp.potato" ~?= [ ( TokWord False "tmp"
+                                           , Position 1 0 0
+                                           , Position 1 3 3 )
+                                         , ( TokSymbol "."
+                                           , Position 1 3 3
+                                           , Position 1 4 4 )
+                                         , ( TokWord False "potato"
+                                           , Position 1 4 4
+                                           , Position 1 10 10 )]
+
+             ],
       "Whitespace splits names, unless inside double quotes"
       ~: test[ tokenize "foo bar"
                ~?= [ ( TokWord False "foo"

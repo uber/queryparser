@@ -122,16 +122,28 @@ schemaNameP = P.tokenPrim showTok posFromTok testTok
         _ -> Nothing
 
 
-tableNameP :: Parser (Text, Range)
+tableNameP :: Parser (Text, Range, Maybe (Text, Range))
 tableNameP = P.tokenPrim showTok posFromTok testTok
   where
     testTok (tok, s, e) = case tok of
-        TokWord True name -> Just (name, Range s e)
+      -- Because Hive has undocumented behavior,
+      -- we split quoted strings if they are table names
+        TokWord True name ->
+          let (front, back) = breakOn "." name
+              s' = advance front s
+              e' = advance "." s'
+          in case back of
+               ""  -> Just (name, Range s e, Nothing)
+               "." -> Just (name, Range s e, Nothing)
+               _   -> Just (Data.Text.Lazy.tail back, Range e' e, Just (front, Range s s'))
         TokWord False name
-            | wordCanBeTableName (wordInfo name) -> Just (name, Range s e)
+            | wordCanBeTableName (wordInfo name) -> Just (name, Range s e, Nothing)
 
         _ -> Nothing
 
+remergeQuotedTableName :: (Text, Range, Maybe (Text, Range)) -> (Text, Range)
+remergeQuotedTableName (t, r, Nothing) = (t, r)
+remergeQuotedTableName (tn, r, Just (sn, r')) = (Data.Text.Lazy.concat [sn, ".", tn], r <> r')
 
 projectionNameP :: Parser (Text, Range)
 projectionNameP = P.tokenPrim showTok posFromTok testTok

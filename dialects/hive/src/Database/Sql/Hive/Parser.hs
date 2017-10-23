@@ -715,7 +715,7 @@ explainP = do
 
 tableAliasP :: Parser (TableAlias Range)
 tableAliasP = do
-    (name, r) <- Tok.tableNameP
+    (name, r) <- Tok.remergeQuotedTableName <$> Tok.tableNameP
     makeTableAlias r name
 
 
@@ -1451,7 +1451,7 @@ qualifiedTableNameP :: Parser (Text, Text, Range, Range)
 qualifiedTableNameP = do
     (s, r) <- Tok.schemaNameP
     _ <- Tok.dotP
-    (t, r') <- Tok.tableNameP
+    (t, r') <- Tok.remergeQuotedTableName <$> Tok.tableNameP
 
     return (s, t, r, r')
 
@@ -1482,11 +1482,11 @@ selectStarP = choice
         return $ SelectStar r Nothing Unused
 
     , try $ do
-        (t, r) <- Tok.tableNameP
+        (t, r, sMaybe) <- Tok.tableNameP
         _ <- Tok.dotP
         r' <- Tok.starP
-
-        return $ SelectStar (r <> r') (Just $ QTableName r Nothing t) Unused
+        let sn = sMaybe >>= (\(sText, sRange) -> Just $ mkNormalSchema sText sRange)
+        return $ SelectStar (r <> r') (Just $ QTableName r sn t) Unused
 
     , try $ do
         (s, t, r, r') <- qualifiedTableNameP
@@ -1505,8 +1505,9 @@ tableNameP = choice
         return $ QTableName r' (Just $ mkNormalSchema s r) t
 
     , do
-        (t, r) <- Tok.tableNameP
-        return $ QTableName r Nothing t
+        (t, r, sMaybe) <- Tok.tableNameP
+        let sn = sMaybe >>= (\(sText, sRange) -> Just $ mkNormalSchema sText sRange)
+        return $ QTableName r sn t
     ]
 
 
@@ -1539,13 +1540,15 @@ columnNameP :: Parser (OQColumnName Range)
 columnNameP = choice
     -- Note that in hive, column names cannot lead with schema qualifiers
     [ try $ do
-        (t, r) <- Tok.tableNameP
+        -- Unless it's in a quoted string. *groan*
+        (t, r, sMaybe) <- Tok.tableNameP
         _ <- Tok.dotP
         (c, r') <- Tok.columnNameP
 
         _ <- checkTableNameInScopeP t
 
-        return $ QColumnName r' (Just $ QTableName r Nothing t) c
+        let sn = sMaybe >>= (\(sText, sRange) -> Just $ mkNormalSchema sText sRange)
+        return $ QColumnName r' (Just $ QTableName r sn t) c
 
     , do
         (c, r) <- Tok.columnNameP

@@ -523,6 +523,94 @@ testParser_hiveSuite = test
           ( HiveStandardSqlStatement
             (QueryStmt $ parseExactHelperSelect1 0 ))
 
+        , parse "SELECT 1 AS `foo.bar`;" ~?= Right
+        ( HiveStandardSqlStatement
+          (QueryStmt
+           (QuerySelect
+            (Range (Position 1 0 0) (Position 1 21 21))
+             (Select
+              { selectInfo =
+                (Range (Position 1 0 0) (Position 1 21 21))
+              , selectCols =
+                (SelectColumns
+                 (Range (Position 1 7 7) (Position 1 21 21))
+                  [SelectExpr
+                    (Range (Position 1 7 7) (Position 1 21 21))
+                    [ColumnAlias
+                     (Range (Position 1 12 12) (Position 1 21 21))
+                     "foo.bar"
+                     (ColumnAliasId 1)
+                    ]
+                    (ConstantExpr
+                     (Range (Position 1 7 7) (Position 1 8 8))
+                     (NumericConstant
+                       (Range (Position 1 7 7) (Position 1 8 8))
+                       "1"
+                     )
+                    )
+                  ]
+                )
+              , selectFrom = Nothing
+              , selectWhere = Nothing
+              , selectTimeseries = Nothing
+              , selectGroup = Nothing
+              , selectHaving = Nothing
+              , selectNamedWindow = Nothing
+              , selectDistinct = notDistinct
+              }
+             )
+           )
+          )
+        )
+
+        , parse "SELECT 1 FROM `foo.bar`;" ~?= Right
+        ( HiveStandardSqlStatement
+          (QueryStmt
+           (QuerySelect
+            (Range (Position 1 0 0) (Position 1 23 23))
+             (Select
+              { selectInfo =
+                (Range (Position 1 0 0) (Position 1 23 23))
+              , selectCols =
+                (SelectColumns
+                 (Range (Position 1 7 7) (Position 1 8 8))
+                  [SelectExpr
+                    (Range (Position 1 7 7) (Position 1 8 8))
+                    [ColumnAlias
+                     (Range (Position 1 7 7) (Position 1 8 8))
+                     "_c0"
+                     (ColumnAliasId 1)
+                    ]
+                    (ConstantExpr
+                     (Range (Position 1 7 7) (Position 1 8 8))
+                     (NumericConstant
+                       (Range (Position 1 7 7) (Position 1 8 8))
+                       "1"
+                     )
+                    )
+                  ]
+                )
+              , selectFrom = Just
+                ( SelectFrom (Range (Position 1 9 9) (Position 1 23 23))
+                [TablishTable (Range (Position 1 14 14) (Position 1 23 23)) TablishAliasesNone
+                (QTableName (Range (Position 1 18 18) (Position 1 23 23))
+                 (Just (QSchemaName (Range (Position 1 14 14) (Position 1 17 17))
+                        Nothing
+                         "foo"
+                         NormalSchema))
+                 "bar")])
+              , selectWhere = Nothing
+              , selectTimeseries = Nothing
+              , selectGroup = Nothing
+              , selectHaving = Nothing
+              , selectNamedWindow = Nothing
+              , selectDistinct = notDistinct
+              }
+             )
+           )
+          )
+        )
+
         , parse "SELECT * FROM potato;" ~?= Right
           ( HiveStandardSqlStatement
             (QueryStmt $ evalState parseExactHelperSelectStar (Position 1 0 0)))
@@ -1437,6 +1525,7 @@ testParser = test
             ]
         , "CREATE EXTERNAL TABLE blah (id INT) LOCATION 'hdfs://blah';"
         , "CREATE EXTERNAL TABLE blah LOCATION 'hdfs://blah';"
+        , "CREATE TABLE `tmp.potato` (int a);"
         , "SELECT * FROM foo AS a;"
         , "SELECT 1 AS (a);"
         , "SELECT ISNULL(1);"
