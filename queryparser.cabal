@@ -9,10 +9,17 @@ name:                queryparser
 version:             0.1.0.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis:            Analysis and parsing library for SQL queries.
 
 -- A longer description of the package.
--- description:
+description:
+            A library for parsing SQL queries into well-typed data structures,
+            and producing easily quantifiable analyses from said data
+            structures.
+            .
+            Currently this includes support for Hive, Vertica, and Presto
+            dialects of SQL. Parsing for each dialect is provided in their own
+            package, as queryparser-{dialect}
 
 -- The license under which the package is released.
 license:             MIT
