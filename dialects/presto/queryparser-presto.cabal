@@ -9,10 +9,15 @@ name:                queryparser-presto
 version:             0.1.0.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis:            Parsing for Presto SQL queries
 
 -- A longer description of the package.
--- description:
+description:
+            A library for parsing Presto SQL queries into analyzable ASTs.
+            .
+            This library is to be used with the queryparser library, which
+            provides the common type definitions and analyses across the
+            different SQL dialects.
 
 -- The license under which the package is released.
 license:             MIT
