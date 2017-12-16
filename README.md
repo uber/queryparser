@@ -155,6 +155,13 @@ Or pull things up in ghci with:
 
     stack ghci
 
+## Contributing
+
+If you'd like to contribute to the repo, use the above installation instructions to get started.
+
+When you're ready, make sure that the code compiles with the `Development` flag, i.e.:
+
+    stack build --flag queryparser:development
 
 ## Use
 
