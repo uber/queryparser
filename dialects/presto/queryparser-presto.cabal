@@ -41,6 +41,11 @@ build-type:          Simple
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
 
+flag development {
+    description: Enable development level of strictness
+    default: False
+    manual: True
+}
 
 library
   -- Modules exported by the library.
@@ -84,7 +89,10 @@ library
   hs-source-dirs:      src
 
 
-  ghc-options: -Wall -Werror
+  ghc-options:         -Wall
+
+  if flag(development)
+    ghc-options:       -Werror
 
   -- Base language which the package is written in.
   default-language:    Haskell2010
