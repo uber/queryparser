@@ -1,7 +1,7 @@
 # For more information, see: https://github.com/commercialhaskell/stack/blob/release/doc/yaml_configuration.md
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-6.29
+resolver: lts-10.4
 
 # Local packages, usually specified by relative directory name
 packages:
@@ -17,7 +17,10 @@ docker:
     enable: true
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: ['test-framework-quickcheck-0.3.0']
+extra-deps: [ 'test-framework-quickcheck-0.3.0'
+            , 'file-location-0.4.9.1'
+            , 'fixed-list-0.1.6'
+            ]
 
 # Override default flag values for local packages and extra-deps
 flags: {}

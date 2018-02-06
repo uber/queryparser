@@ -64,7 +64,7 @@ library
                      , Database.Sql.Util.Catalog.Test
                      , Database.Sql.Util.Columns.Test
                      , Test.HUnit.Ticket
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.10 && <4.11
                      , queryparser
                      , queryparser-vertica
                      , queryparser-hive
@@ -79,7 +79,7 @@ library
                      , unordered-containers
                      , file-location
                      , hpc
-                     , HUnit >= 1.2 && < 1.4
+                     , HUnit >= 1.2
                      , template-haskell
                      , test-framework
                      , test-framework-hunit
@@ -117,12 +117,13 @@ test-suite queryparser-test-suite
                      , Database.Sql.Util.Lineage.ColumnPlus.Test
                      , Database.Sql.Util.Schema.Test
                      , Database.Sql.Util.Scope.Test
+                     , Database.Sql.Util.Tables.Test
                      , Database.Sql.Util.Test
                      , Database.Sql.Util.Catalog
                      , Database.Sql.Util.Catalog.Test
                      , Database.Sql.Util.Columns.Test
                      , Test.HUnit.Ticket
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.10 && <4.11
                      , queryparser-test
                      , queryparser
                      , queryparser-vertica
@@ -138,7 +139,7 @@ test-suite queryparser-test-suite
                      , unordered-containers
                      , file-location
                      , hpc
-                     , HUnit >= 1.2 && < 1.4
+                     , HUnit >= 1.2
                      , template-haskell
                      , test-framework
                      , test-framework-hunit

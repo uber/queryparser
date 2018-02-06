@@ -89,7 +89,7 @@ library
                      , FlexibleInstances
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.10 && <4.11
                      , text >=1.2 && <1.3
                      , bytestring
                      , containers
@@ -120,7 +120,7 @@ library
 benchmark queryparser-bench
   type:                exitcode-stdio-1.0
   main-is:             Bench.hs
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.10 && <4.11
                      , queryparser
                      , criterion
                      , text

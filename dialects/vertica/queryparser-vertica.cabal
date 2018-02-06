@@ -65,7 +65,7 @@ library
                      , Database.Sql.Vertica.Parser.Shared
 
   -- Modules included in this library but not exported.
-  -- other-modules:     
+  -- other-modules:
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
@@ -75,7 +75,7 @@ library
                      , FlexibleInstances
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.10 && <4.11
                      , text >=1.2 && <1.3
                      , bytestring
                      , queryparser

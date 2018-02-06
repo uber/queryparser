@@ -484,11 +484,11 @@ instance ToJSON a => ToJSON (RUsingColumn a) where
         ]
 
 instance (ToJSON (f (QSchemaName f a)), ToJSON a) => ToJSON (QFunctionName f a) where
-    toJSON (QFunctionName info schema function) = object
+    toJSON (QFunctionName info schema fn) = object
         [ "tag" .= String "QFunctionName"
         , "info" .= info
         , "schema" .= schema
-        , "function" .= function
+        , "function" .= fn
         ]
 
 
