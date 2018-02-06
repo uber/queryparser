@@ -897,10 +897,10 @@ instance ConstrainSNames ToJSON r a => ToJSON (Expr r a) where
         , "query" .= query
         ]
 
-    toJSON (FunctionExpr info function distinct args params filter' over) = object
+    toJSON (FunctionExpr info fn distinct args params filter' over) = object
         [ "tag" .= String "FunctionExpr"
         , "info" .= info
-        , "function" .= function
+        , "function" .= fn
         , "distinct" .= distinct
         , "args" .= args
         , "params" .= params
@@ -1401,7 +1401,7 @@ instance FromJSON a => FromJSON (Constant a) where
             info <- o .: "info"
             value <- TL.encodeUtf8 <$> o .: "value"
                 <|> BL.pack <$> o .: "value"
-                <|> fail "expected string or array for StringConstant value" 
+                <|> fail "expected string or array for StringConstant value"
             pure $ StringConstant info value
 
         String "NumericConstant" ->

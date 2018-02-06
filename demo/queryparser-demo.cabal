@@ -1,21 +1,21 @@
 name:                queryparser-demo
 version:             0.1.0.0
--- synopsis:            
--- description:         
+-- synopsis:
+-- description:
 license:             MIT
 license-file:        LICENSE
 author:              Heli Wang, David Thomas, Matt Halverson
 maintainer:          heli@uber.com
--- copyright:           
+-- copyright:
 category:            Database
 build-type:          Simple
 cabal-version:       >=1.10
 
 library
   exposed-modules:     Demo
-  -- other-modules:       
-  -- other-extensions:    
-  build-depends:       base >=4.8 && <4.9
+  -- other-modules:
+  -- other-extensions:
+  build-depends:       base >=4.10 && <4.11
                      , queryparser
                      , queryparser-vertica
                      , unordered-containers >=0.2 && <0.3

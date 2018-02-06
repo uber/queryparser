@@ -21,11 +21,3 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.Functor.Identity.Orphans where
-
-import Data.Functor.Identity
-
-import Test.QuickCheck
-
-instance Arbitrary a => Arbitrary (Identity a) where
-    arbitrary = Identity <$> arbitrary
-    shrink (Identity x) = Identity <$> shrink x
