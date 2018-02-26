@@ -2034,8 +2034,14 @@ sumExprP = productExprP `chainl1` opP
     opP = choice $ map binOpP [ "+", "-" ]
 
 
+stringExprP :: Parser (Expr RawNames Range)
+stringExprP = sumExprP `chainl1` opP
+  where
+    opP = choice $ map binOpP [ "||" ]
+
+
 bitwiseAndExprP :: Parser (Expr RawNames Range)
-bitwiseAndExprP = sumExprP `chainl1` binOpP "&"
+bitwiseAndExprP = stringExprP `chainl1` binOpP "&"
 
 
 bitwiseOrExprP :: Parser (Expr RawNames Range)

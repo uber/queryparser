@@ -49,6 +49,7 @@ isHSpace = isSpace && not (== '\n')
 operators :: [Text]
 operators = sortBy (flip compare)
     [ "+", "-", "*", "/", "%"
+    , "||"
     , "&", "|", "^", "~"
     , "!"
     , ":"
