@@ -172,3 +172,8 @@ Mostly it boils down to this function:
 To parse some sql from the repl,
 
     parse "SELECT 1;"
+
+## Areas of future interest
+
+There is substantial room for future work in Queryparser. For more details, see
+[Areas of future interest](FUTURE.md).
