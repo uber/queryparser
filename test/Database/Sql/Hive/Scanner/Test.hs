@@ -144,6 +144,82 @@ testTokenizer =
              ]
       ],
 
+    "Test operators"
+    ~: test[
+      "Relational"
+      ~: test [ tokenize "!=" ~?= [( TokSymbol "!="
+                                    , initPos
+                                    , Position 1 2 2 )]
+              , tokenize "<>" ~?= [( TokSymbol "<>"
+                                    , initPos
+                                    , Position 1 2 2 )]
+              , tokenize ">" ~?= [( TokSymbol ">"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "<" ~?= [( TokSymbol "<"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize ">=" ~?= [( TokSymbol ">="
+                                    , initPos
+                                    , Position 1 2 2 )]
+              , tokenize "<=" ~?= [( TokSymbol "<="
+                                    , initPos
+                                    , Position 1 2 2 )]
+              , tokenize "<=>" ~?= [( TokSymbol "<=>"
+                                    , initPos
+                                    , Position 1 3 3 )]
+              , tokenize "=" ~?= [( TokSymbol "="
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "==" ~?= [( TokSymbol "=="
+                                    , initPos
+                                    , Position 1 2 2 )]
+              ],
+
+      "Bits"
+      ~: test [ tokenize "&" ~?= [( TokSymbol "&"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "|" ~?= [( TokSymbol "|"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "^" ~?= [( TokSymbol "^"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "~" ~?= [( TokSymbol "~"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "!" ~?= [( TokSymbol "!"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              ],
+
+      "Arithmetic"
+      ~: test [ tokenize "+" ~?= [( TokSymbol "+"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "-" ~?= [( TokSymbol "-"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "*" ~?= [( TokSymbol "*"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "/" ~?= [( TokSymbol "/"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              , tokenize "%" ~?= [( TokSymbol "%"
+                                    , initPos
+                                    , Position 1 1 1 )]
+              ],
+
+      "Strings"
+      ~: test [ tokenize "||" ~?= [( TokSymbol "||"
+                                    , initPos
+                                    , Position 1 2 2 )]
+              ]
+      ],
+
+
     "Test keywords"
     ~: test[
       "All"
