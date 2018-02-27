@@ -72,7 +72,7 @@ library
                      , FlexibleInstances
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.9 && <4.11
                      , text >=1.2 && <1.3
                      , bytestring
                      , queryparser
@@ -94,7 +94,7 @@ library
   hs-source-dirs:      src
 
 
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Wno-redundant-constraints
 
   if flag(development)
     ghc-options:       -Werror
