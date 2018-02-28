@@ -41,7 +41,6 @@ import Data.Aeson
 import Data.Semigroup
 import Data.String
 import Data.Functor.Identity
-import Data.Functor.Identity.Orphans ()
 import Data.Data (Data, Typeable)
 
 import qualified Data.Map as M
