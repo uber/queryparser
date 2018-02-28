@@ -15,6 +15,6 @@ library
   exposed-modules:     Data.Predicate.Class
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.9 && <4.11
   hs-source-dirs:      src
   default-language:    Haskell98
