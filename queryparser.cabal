@@ -79,7 +79,7 @@ library
 
   -- Modules included in this library but not exported.
   other-modules:       Data.Maybe.More
-                     , Data.Functor.Identity.Orphans
+                     , Test.QuickCheck
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
@@ -89,7 +89,7 @@ library
                      , FlexibleInstances
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.9 && <4.11
                      , text >=1.2 && <1.3
                      , bytestring
                      , containers
@@ -106,10 +106,10 @@ library
                      , predicate-class
 
   -- Directories containing source files.
-  hs-source-dirs:      src
+  hs-source-dirs:      src, compat
 
 
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Wno-redundant-constraints
 
   if flag(development)
     ghc-options:       -Werror
@@ -120,7 +120,7 @@ library
 benchmark queryparser-bench
   type:                exitcode-stdio-1.0
   main-is:             Bench.hs
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.9 && <4.11
                      , queryparser
                      , criterion
                      , text

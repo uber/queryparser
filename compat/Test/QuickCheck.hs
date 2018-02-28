@@ -19,5 +19,17 @@
 -- THE SOFTWARE.
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE CPP #-}
 
-module Data.Functor.Identity.Orphans where
+module Test.QuickCheck (module X) where
+
+import "QuickCheck" Test.QuickCheck as X
+
+#if !MIN_VERSION_QuickCheck(2,9,0)
+import Data.Functor.Identity
+
+instance Arbitrary a => Arbitrary (Identity a) where
+    arbitrary = Identity <$> arbitrary
+    shrink (Identity x) = Identity <$> shrink x
+#endif
