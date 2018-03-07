@@ -166,29 +166,34 @@ functionNameP = P.tokenPrim showTok posFromTok testTok
 
         _ -> Nothing
 
+propertyValuePartP :: Parser (Text, Range)
+propertyValuePartP = textUntilP [";"]
 
--- a property name part may include dashes
-propertyNamePartP :: Parser (Text, Range)
-propertyNamePartP = do
-    xs <- namePartPartP `P.sepBy1` minusP
-    let namePartParts = map fst xs
-        ranges = map snd xs
-        namePart = intercalate "-" namePartParts
-        info = head ranges <> last ranges
-    return $ (namePart, info)
-  where
-    namePartPartP = P.tokenPrim showTok posFromTok testNameTok
+-- Hive supports property names and values contianing
+--  equal signs and spaces. Here we stop on the first equal sign.
+propertyNameP :: Parser (Text, Range)
+propertyNameP = textUntilP ["=", ";"]
 
--- a property name is composed of name-parts separated by dots
-propertyNameP :: Parser ([Text], Range)
-propertyNameP = do
-    firstPart <- propertyNamePartP
-    subsequentParts <- P.many $ dotP >> propertyNamePartP
-    let allParts = firstPart:subsequentParts
-        s = snd $ head allParts
-        e = snd $ last allParts
-        nameParts = map fst allParts
-    return $ (nameParts, s <> e)
+-- Parses all tokens until a token equal to a given string is found
+--  returns parsed text.
+textUntilP :: [Text] -> Parser (Text, Range)
+textUntilP x = do
+    res <- P.many $ anyTokenExceptX
+    let name = Data.Text.Lazy.concat $ fst <$> res
+        s = snd $ head res
+        e = snd $ last res
+    pure (name, s <> e)
+    where
+      anyTokenExceptX :: Parser (Text, Range)
+      anyTokenExceptX = P.tokenPrim showTok posFromTok $
+        \ (tok, s, e) -> case tok of
+          TokSymbol t | not (t `elem` x) ->
+            Just (t, Range s e)
+          TokWord _ t | not (t `elem` x) ->
+            Just (t, Range s e)
+          TokNumber t | not (t `elem` x) ->
+            Just (t, Range s e)
+          _ -> Nothing
 
 
 keywordP :: Text -> Parser Range

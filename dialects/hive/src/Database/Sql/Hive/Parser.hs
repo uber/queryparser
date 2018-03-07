@@ -92,7 +92,7 @@ statementParser = do
         , try $ HiveAlterTableSetLocationStmt <$> alterTableSetLocationP
         , try $ HiveUnhandledStatement <$> alterTableSetTblPropertiesP
         , alterPartitionP
-        , HiveUnhandledStatement <$> setP
+        , HiveSetPropertyStmt <$> setP
         , HiveUnhandledStatement <$> reloadFunctionP
         ]
     case maybeStmt of
@@ -463,17 +463,21 @@ alterPartitionP = do
             ]
 
 
-setP :: Parser Range
+setP :: Parser (SetProperty Range)
 setP = do
     s <- Tok.setP
-    e <- option s $ choice
-        [ Tok.propertyNameP >> Tok.equalP >> last <$> propertyValueP
-        , Tok.symbolP "-" >> Tok.keywordP "v"
-        ]
-    return $ s <> e
-  where
-    propertyValueP = P.many1 Tok.notSemicolonP
+    option (PrintProperties s "") $ choice $
+      [ do
+        _ <- Tok.minusP >> Tok.keywordP "v"
+        pure $ PrintProperties s "-v"
 
+        , do
+        (name, _)  <- Tok.propertyNameP
+        _ <- Tok.equalP
+        (setConfigValue, e) <- Tok.propertyValuePartP
+        let details = SetPropertyDetails (s <> e) name setConfigValue
+        pure $ SetProperty details
+      ]
 
 reloadFunctionP :: Parser Range
 reloadFunctionP = do
