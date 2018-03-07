@@ -47,6 +47,7 @@ import Control.Monad.Writer (tell)
 import Data.Aeson
 import qualified Data.Map  as M
 import qualified Data.Set  as S
+import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BL
@@ -87,6 +88,7 @@ data HiveStatement r a = HiveStandardSqlStatement (Statement Hive r a)
                          | HiveTruncatePartitionStmt (TruncatePartition r a)
                          | HiveAlterTableSetLocationStmt (AlterTableSetLocation r a)
                          | HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation r a)
+                         | HiveSetPropertyStmt (SetProperty a)
                          | HiveUnhandledStatement a
 
 deriving instance (ConstrainSNames Data r a, Data r) => Data (HiveStatement r a)
@@ -96,6 +98,16 @@ deriving instance ConstrainSNames Show r a => Show (HiveStatement r a)
 deriving instance ConstrainSASNames Functor r => Functor (HiveStatement r)
 deriving instance ConstrainSASNames Foldable r => Foldable (HiveStatement r)
 deriving instance ConstrainSASNames Traversable r => Traversable (HiveStatement r)
+
+data SetProperty a = SetProperty (SetPropertyDetails a)
+                     | PrintProperties a Text
+                       deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
+
+data SetPropertyDetails a = SetPropertyDetails
+    { setPropertyDetailsInfo :: a
+    , setPropertyDetailsName :: Text
+    , setPropertyDetailsValue :: Text
+    } deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
 
 -- Important terminology note:
 -- Hive "databases" are schemas.
@@ -215,6 +227,7 @@ instance HasJoins (HiveStatement ResolvedNames a) where
     getJoins (HiveTruncatePartitionStmt _) = S.empty
     getJoins (HiveAlterTableSetLocationStmt _) = S.empty
     getJoins (HiveAlterPartitionSetLocationStmt _) = S.empty
+    getJoins (HiveSetPropertyStmt _) = S.empty
     getJoins (HiveUnhandledStatement _) = S.empty
 
 instance HasTableLineage (HiveStatement ResolvedNames a) where
@@ -227,6 +240,7 @@ instance HasTableLineage (HiveStatement ResolvedNames a) where
          in M.singleton table $ S.singleton table
     getTableLineage (HiveAlterTableSetLocationStmt _) = M.empty
     getTableLineage (HiveAlterPartitionSetLocationStmt _) = M.empty
+    getTableLineage (HiveSetPropertyStmt _) = M.empty
     getTableLineage (HiveUnhandledStatement _) = M.empty
 
 instance HasColumnLineage (HiveStatement ResolvedNames Range) where
@@ -240,6 +254,7 @@ instance HasColumnLineage (HiveStatement ResolvedNames Range) where
                 $ M.fromList $ map ((\ fqcn -> (Right fqcn, singleColumnSet (getInfo t) fqcn)) . fqcnToFQCN . qualifyColumnName t) columnsList
     getColumnLineage (HiveAlterTableSetLocationStmt _) = returnNothing M.empty
     getColumnLineage (HiveAlterPartitionSetLocationStmt _) = returnNothing M.empty
+    getColumnLineage (HiveSetPropertyStmt _) = returnNothing M.empty
     getColumnLineage (HiveUnhandledStatement _) = returnNothing M.empty
 
 resolveHiveStatement :: HiveStatement RawNames a -> Resolver (HiveStatement ResolvedNames) a
@@ -250,6 +265,7 @@ resolveHiveStatement (HiveInsertDirectoryStmt stmt) = HiveInsertDirectoryStmt <$
 resolveHiveStatement (HiveTruncatePartitionStmt stmt) = HiveTruncatePartitionStmt <$> resolveTruncatePartition stmt
 resolveHiveStatement (HiveAlterTableSetLocationStmt stmt) = HiveAlterTableSetLocationStmt <$> resolveAlterTableSetLocation stmt
 resolveHiveStatement (HiveAlterPartitionSetLocationStmt stmt) = HiveAlterPartitionSetLocationStmt <$> resolveAlterPartitionSetLocation stmt
+resolveHiveStatement (HiveSetPropertyStmt stmt) = pure $ HiveSetPropertyStmt stmt
 resolveHiveStatement (HiveUnhandledStatement stmt) = pure $ HiveUnhandledStatement stmt
 
 resolveAnalyze :: Analyze RawNames a -> Resolver (Analyze ResolvedNames) a
@@ -314,6 +330,7 @@ instance HasSchemaChange (HiveStatement ResolvedNames a) where
     getSchemaChange (HiveAlterTableSetLocationStmt _) = []  -- In fact, it may very well have a schema change but
                                                             -- we can't know without hitting the metastore.
     getSchemaChange (HiveAlterPartitionSetLocationStmt _) = []
+    getSchemaChange (HiveSetPropertyStmt _) = []
     getSchemaChange (HiveUnhandledStatement _) = []
 
 instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (HiveStatement r a) where
@@ -341,6 +358,10 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (HiveStatement r a) wh
     toJSON (HiveAlterPartitionSetLocationStmt alterPartitionSetLocation) = object
         [ "tag" .= String "HiveAlterPartitionSetLocationStmt"
         , "statement" .= alterPartitionSetLocation
+        ]
+    toJSON (HiveSetPropertyStmt stmt) = object
+        [ "tag" .= String "HiveSetPropertyStmt"
+        , "info" .= stmt
         ]
     toJSON (HiveUnhandledStatement info) = object
         [ "tag" .= String "HiveUnhandledStatement"
@@ -372,6 +393,22 @@ instance ToJSON a => ToJSON (InsertDirectoryLocale a) where
 instance ToJSON a => ToJSON (Use a) where
     toJSON (UseDatabase dbn) = toJSON dbn
     toJSON (UseDefault _) = String "Default"
+
+instance ToJSON a => ToJSON (SetProperty a) where
+    toJSON (SetProperty details) = toJSON details
+    toJSON (PrintProperties info t) = object
+        [ "tag" .= String "Set"
+        , "info" .= info
+        , "property" .= t
+        ]
+
+instance ToJSON a => ToJSON (SetPropertyDetails a) where
+    toJSON d@SetPropertyDetails{} = object
+        [ "tag" .= String "Set"
+        , "info" .= setPropertyDetailsInfo d
+        , "property" .= setPropertyDetailsName d
+        , "value" .= setPropertyDetailsValue d
+        ]
 
 instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (Analyze r a) where
     toJSON (Analyze info tbn) = object
@@ -429,6 +466,7 @@ instance HasTables (HiveStatement ResolvedNames a) where
   goTables (HiveTruncatePartitionStmt s) = goTables s
   goTables (HiveAlterTableSetLocationStmt s) = goTables s
   goTables (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ (RTableName fqtn _) _ _)) = tell $ S.singleton $ TableUse WriteMeta $ fqtnToFQTN fqtn
+  goTables (HiveSetPropertyStmt _) = return ()
   goTables (HiveUnhandledStatement _) = return ()
 
 instance HasTables (InsertDirectory ResolvedNames a) where
@@ -452,6 +490,7 @@ instance HasColumns (HiveStatement ResolvedNames a) where
   goColumns (HiveAlterPartitionSetLocationStmt (AlterPartitionSetLocation _ _ items _)) =
       forM_ items $ \ (StaticPartitionSpecItem _ column _) ->
           tell [clauseObservation (void column) "PARTITION"]
+  goColumns (HiveSetPropertyStmt _) = return ()
   goColumns (HiveUnhandledStatement _) = return ()
 
 instance HasColumns (InsertDirectory ResolvedNames a) where

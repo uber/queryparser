@@ -425,6 +425,7 @@ testParser_hiveSuite = test
       , "SET hive.exec.parallel = true;"
       , "SET mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;"
       , "SET mapreduce.job.queuename=foo-bar-baz;"
+      , "SET x*x=1*5;"
       , "SET foo-bar-baz=foo-bar-baz;"
       , "SET;"
       , "SET -v;"
