@@ -27,6 +27,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Database.Sql.Hive.Type where
 
@@ -65,10 +66,12 @@ dialectProxy :: Proxy Hive
 dialectProxy = Proxy
 
 instance Dialect Hive where
+    type DialectCreateTableExtra Hive r = HiveCreateTableExtra r
 
     shouldCTEsShadowTables _ = False
 
-    resolveCreateTableExtra _ Unused = pure Unused
+    -- Nothing to resolve in the table extra
+    resolveCreateTableExtra _ HiveCreateTableExtra{..} = pure HiveCreateTableExtra{..}
 
     getSelectScope _ fromColumns selectionAliases = SelectScope
         { bindForWhere = bindFromColumns fromColumns
@@ -107,6 +110,30 @@ data SetPropertyDetails a = SetPropertyDetails
     { setPropertyDetailsInfo :: a
     , setPropertyDetailsName :: Text
     , setPropertyDetailsValue :: Text
+    } deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
+
+data HiveCreateTableExtra r a = HiveCreateTableExtra
+    { hiveCreateTableExtraInfo :: a
+    , hiveCreateTableExtraTableProperties :: Maybe (HiveMetadataProperties a)
+    }
+
+deriving instance (ConstrainSNames Data r a, Data r) => Data (HiveCreateTableExtra r a)
+deriving instance Generic (HiveCreateTableExtra r a)
+deriving instance ConstrainSNames Eq r a => Eq (HiveCreateTableExtra r a)
+deriving instance ConstrainSNames Show r a => Show (HiveCreateTableExtra r a)
+deriving instance ConstrainSASNames Functor r => Functor (HiveCreateTableExtra r)
+deriving instance ConstrainSASNames Foldable r => Foldable (HiveCreateTableExtra r)
+deriving instance ConstrainSASNames Traversable r => Traversable (HiveCreateTableExtra r)
+
+data HiveMetadataProperties a = HiveMetadataProperties
+    { hiveMetadataPropertiesInfo :: a
+    , hiveMetadataPropertiesProperties :: [HiveMetadataProperty a]
+    } deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
+
+data HiveMetadataProperty a = HiveMetadataProperty
+    { hiveMetadataPropertyInfo :: a
+    , hiveMetadataPropertyKey :: ByteString
+    , hiveMetadataPropertyValue :: ByteString
     } deriving (Generic, Data, Eq, Show, Functor, Foldable, Traversable)
 
 -- Important terminology note:
@@ -371,6 +398,33 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (HiveStatement r a) wh
 typeExample :: ()
 typeExample = const () $ toJSON (undefined :: HiveStatement ResolvedNames Range)
 
+instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (HiveCreateTableExtra r a) where
+    toJSON HiveCreateTableExtra{..} = object
+        [ "tag" .= String "HiveCreateTableExtra"
+        , "info" .= hiveCreateTableExtraInfo
+        , "properties" .= hiveCreateTableExtraTableProperties
+        ]
+
+instance ToJSON a => ToJSON (HiveMetadataProperties a) where
+    toJSON HiveMetadataProperties{..} = object
+        [ "tag" .= String "HiveMetadataProperties"
+        , "info" .= hiveMetadataPropertiesInfo
+        , "properties" .= hiveMetadataPropertiesProperties
+        ]
+
+instance ToJSON a => ToJSON (HiveMetadataProperty a) where
+    toJSON HiveMetadataProperty{..} = object
+        [ "tag" .= String "MetadataProperty"
+        , "info" .= hiveMetadataPropertyInfo
+        , "key" .= bsToJSON hiveMetadataPropertyKey
+        , "value" .= bsToJSON hiveMetadataPropertyValue
+        ]
+
+bsToJSON :: ByteString -> Value
+bsToJSON bs = case TL.decodeUtf8' bs of
+    Left _ -> toJSON $ BL.unpack bs
+    Right str -> toJSON str
+
 instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (InsertDirectory r a) where
     toJSON stmt = object
         [ "tag" .= String "InsertDirectory"
@@ -381,10 +435,7 @@ instance (ConstrainSNames ToJSON r a, ToJSON a) => ToJSON (InsertDirectory r a) 
         ]
 
 instance ToJSON a => ToJSON (Location a) where
-    toJSON (HDFSPath _ p) =
-        case TL.decodeUtf8' p of
-            Left _ -> toJSON $ BL.unpack p
-            Right str -> toJSON str
+    toJSON (HDFSPath _ p) = bsToJSON p
 
 instance ToJSON a => ToJSON (InsertDirectoryLocale a) where
     toJSON (InsertDirectoryLocal _) = String "Local"

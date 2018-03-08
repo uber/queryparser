@@ -48,7 +48,7 @@ import           Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.List as L
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Monoid (Endo (..))
 import qualified Text.Parsec as P
 import           Text.Parsec ( chainl1, choice, many
@@ -883,12 +883,12 @@ createTableLikeP = do
     return CreateTable{..}
 
 
-propertyP :: Parser Range
+propertyP :: Parser (HiveMetadataProperty Range)
 propertyP = do
-    s <- snd <$> Tok.stringP
+    (k, s) <- Tok.stringP
     _ <- Tok.equalP
-    e <- snd <$> Tok.stringP
-    return $ s <> e
+    (v, e) <- Tok.stringP
+    return $ HiveMetadataProperty (s <> e) k v
 
 storedAsP :: Parser Range
 storedAsP = do
@@ -930,7 +930,6 @@ createTableStandardP = do
             , rowFormatP
             , storedAsP
             , getInfo <$> locationP
-            , tblPropertiesP
             ]
 
     createTableDefinition <- case tableDefColumns of
@@ -940,9 +939,16 @@ createTableStandardP = do
             , createTableNoColumnInfoP e2
             ]
 
-    let createTableExtra = Nothing
-        e3 = getInfo createTableDefinition
-        createTableInfo = s <> e1 <> e2 <> e3
+    tblProperties <- option Nothing (Just <$> tblPropertiesP)
+
+    let e3 = getInfo createTableDefinition
+        e4 = fromMaybe e2 (hiveMetadataPropertiesInfo <$> tblProperties)
+        createTableExtra =
+          Just HiveCreateTableExtra
+          { hiveCreateTableExtraInfo = e3 <> e4
+          , hiveCreateTableExtraTableProperties = tblProperties
+          }
+        createTableInfo = s <> e1 <> e2 <> e3 <> e4
 
     pure CreateTable{..}
 
@@ -998,12 +1004,6 @@ createTableStandardP = do
         _ <- Tok.formatP
         delimitedP <|> serdeP
 
-    tblPropertiesP = do
-        _ <- Tok.tblPropertiesP
-        _ <- Tok.openP
-        _ <- propertyP `sepBy1` Tok.commaP
-        Tok.closeP
-
     createTableColumnsP = do
         s <- Tok.openP
         c:cs <- (ColumnOrConstraintColumn <$> columnDefinitionP) `sepBy1` Tok.commaP
@@ -1019,6 +1019,17 @@ createTableStandardP = do
     createTableNoColumnInfoP r =
         -- r represents 'the point at which we decided there was no column info'
         pure $ TableNoColumnInfo r
+
+
+tblPropertiesP :: Parser (HiveMetadataProperties Range)
+tblPropertiesP = do
+        s <- Tok.tblPropertiesP
+        _ <- Tok.openP
+        l <- propertyP `sepBy1` Tok.commaP
+        e <- Tok.closeP
+        let hiveMetadataPropertiesInfo = s <> e
+            hiveMetadataPropertiesProperties = l
+        pure $ HiveMetadataProperties{..}
 
 
 delimitedP :: Parser Range
