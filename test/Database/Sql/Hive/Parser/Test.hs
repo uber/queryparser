@@ -29,6 +29,7 @@ import Database.Sql.Hive.Parser
 import Database.Sql.Hive.Type
 import Database.Sql.Util.Test (makeSelect)
 
+import Data.List.NonEmpty (NonEmpty(..))
 import Data.Monoid
 import Data.Int (Int64)
 import           Data.Text.Lazy (Text)
@@ -544,6 +545,88 @@ testParser_hiveSuite = test
                   , insertColumns = Nothing
                   , insertValues =
                     InsertSelectValues $ parseExactHelperSelect1 38
+                  }
+                )
+              )
+            )
+
+        , parse "CREATE TABLE foo (bar String, baz String) TBLPROPERTIES ('bar'='1')" ~?= Right
+            ( HiveStandardSqlStatement
+              ( CreateTableStmt
+                ( CreateTable
+                  { createTableInfo =
+                      (Range (Position 1 0 0) (Position 1 67 67))
+                  , createTablePersistence = Persistent
+                  , createTableExternality = Internal
+                  , createTableIfNotExists = Nothing
+                  , createTableName =
+                      QTableName
+                      { tableNameInfo =
+                          (Range (Position 1 13 13) (Position 1 16 16))
+                      , tableNameSchema = Nothing
+                      , tableNameName = "foo"
+                      }
+                  , createTableDefinition = TableColumns
+                      (Range (Position 1 17 17) (Position 1 41 41))
+                      (
+                        (
+                          ColumnOrConstraintColumn 
+                          ( ColumnDefinition
+                            { columnDefinitionInfo = (Range (Position 1 18 18) (Position 1 28 28))
+                            , columnDefinitionName =
+                              QColumnName
+                              { columnNameInfo = (Range (Position 1 18 18) (Position 1 21 21))
+                              , columnNameTable = None
+                              , columnNameName = "bar"
+                              }
+                            , columnDefinitionType =
+                              PrimitiveDataType (Range (Position 1 22 22) (Position 1 28 28)) "string" []
+                            , columnDefinitionNull = Nothing
+                            , columnDefinitionDefault = Nothing
+                            , columnDefinitionExtra = Nothing
+                            }
+                          )
+                        )
+                        :|
+                        [
+                          (
+                            ColumnOrConstraintColumn 
+                            ( ColumnDefinition
+                              { columnDefinitionInfo = (Range (Position 1 30 30) (Position 1 40 40))
+                              , columnDefinitionName =
+                                QColumnName
+                                { columnNameInfo = (Range (Position 1 30 30) (Position 1 33 33))
+                                , columnNameTable = None
+                                , columnNameName = "baz"
+                                }
+                              , columnDefinitionType =
+                                PrimitiveDataType (Range (Position 1 34 34) (Position 1 40 40)) "string" []
+                              , columnDefinitionNull = Nothing
+                              , columnDefinitionDefault = Nothing
+                              , columnDefinitionExtra = Nothing
+                              }
+                            )
+                          )
+                        ]
+                      )
+                  , createTableExtra =
+                    Just HiveCreateTableExtra
+                    { hiveCreateTableExtraInfo = Range (Position 1 17 17) (Position 1 67 67)
+                    , hiveCreateTableExtraTableProperties =
+                      Just (
+                        HiveMetadataProperties
+                        { hiveMetadataPropertiesInfo = Range (Position 1 42 42) (Position 1 67 67)
+                        , hiveMetadataPropertiesProperties =
+                          [
+                            HiveMetadataProperty
+                            { hiveMetadataPropertyInfo = Range (Position 1 57 57) (Position 1 66 66)
+                            , hiveMetadataPropertyKey = "bar"
+                            , hiveMetadataPropertyValue = "1"
+                            }
+                          ]
+                        }
+                      )
+                    }
                   }
                 )
               )
