@@ -178,7 +178,7 @@ propertyNameP = textUntilP ["=", ";"]
 --  returns parsed text.
 textUntilP :: [Text] -> Parser (Text, Range)
 textUntilP x = do
-    res <- P.many $ anyTokenExceptX
+    res <- P.many anyTokenExceptX
     let name = Data.Text.Lazy.concat $ fst <$> res
         s = snd $ head res
         e = snd $ last res

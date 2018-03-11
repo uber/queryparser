@@ -467,16 +467,13 @@ setP :: Parser (SetProperty Range)
 setP = do
     s <- Tok.setP
     option (PrintProperties s "") $ choice $
-      [ do
-        _ <- Tok.minusP >> Tok.keywordP "v"
-        pure $ PrintProperties s "-v"
-
-        , do
+      [ Tok.minusP >> Tok.keywordP "v" >> pure (PrintProperties s "-v")
+      , do
         (name, _)  <- Tok.propertyNameP
         _ <- Tok.equalP
         (setConfigValue, e) <- Tok.propertyValuePartP
         let details = SetPropertyDetails (s <> e) name setConfigValue
-        pure $ SetProperty details
+        pure (SetProperty details)
       ]
 
 reloadFunctionP :: Parser Range
