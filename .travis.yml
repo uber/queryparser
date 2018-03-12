@@ -1,0 +1,18 @@
+language: haskell
+
+ghc:
+  - '8.2.2'
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y haskell-stack
+  - stack upgrade --binary
+  - cd ${PACKAGEDIR}
+
+install:
+  - stack docker pull
+
+script: stack test
+
+env:
+  - PACKAGEDIR="test"
