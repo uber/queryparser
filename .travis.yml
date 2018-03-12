@@ -1,0 +1,16 @@
+language: haskell
+
+ghc:
+  - '8.2.2'
+
+before_install:
+  - wget -qO- https://get.haskellstack.org/ | sh
+  - cd ${PACKAGEDIR}
+
+install:
+  - stack docker pull
+
+script: stack test
+
+env:
+  - PACKAGEDIR="test"
