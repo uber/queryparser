@@ -78,8 +78,7 @@ library
                      , Database.Sql.Util.Schema
 
   -- Modules included in this library but not exported.
-  other-modules:       Data.Maybe.More
-                     , Test.QuickCheck
+  other-modules:       Test.QuickCheck
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
