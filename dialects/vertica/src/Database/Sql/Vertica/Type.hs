@@ -52,6 +52,7 @@ import Data.List.NonEmpty (NonEmpty((:|)), toList, fromList)
 import Data.Maybe (catMaybes)
 import Data.Semigroup
 import Data.Text.Lazy (Text)
+import Data.Traversable (traverse)
 
 import           Data.Aeson (ToJSON (..), (.=))
 import qualified Data.Aeson as JSON
@@ -110,16 +111,12 @@ deriving instance ConstrainSASNames Functor r => Functor (TableInfo r)
 deriving instance ConstrainSASNames Foldable r => Foldable (TableInfo r)
 deriving instance ConstrainSASNames Traversable r => Traversable (TableInfo r)
 
-overJust :: Applicative f => (t -> f a) -> Maybe t -> f (Maybe a)
-overJust _ Nothing = pure Nothing
-overJust f (Just x) = Just <$> f x
-
 resolveTableInfo :: TableInfo RawNames a -> Resolver (TableInfo ResolvedNames) a
 resolveTableInfo TableInfo{..} = do
-        tableInfoOrdering' <- overJust (mapM $ resolveOrder []) tableInfoOrdering
-        tableInfoEncoding' <- overJust resolveTableEncoding tableInfoEncoding
-        tableInfoSegmentation' <- overJust resolveSegmentation tableInfoSegmentation
-        tableInfoPartitioning' <- overJust resolvePartitioning tableInfoPartitioning
+        tableInfoOrdering' <- traverse (mapM $ resolveOrder []) tableInfoOrdering
+        tableInfoEncoding' <- traverse resolveTableEncoding tableInfoEncoding
+        tableInfoSegmentation' <- traverse resolveSegmentation tableInfoSegmentation
+        tableInfoPartitioning' <- traverse resolvePartitioning tableInfoPartitioning
         pure TableInfo
             { tableInfoOrdering = tableInfoOrdering'
             , tableInfoEncoding = tableInfoEncoding'
@@ -444,7 +441,7 @@ resolveVerticaStatement (VerticaStandardSqlStatement stmt) = VerticaStandardSqlS
 resolveVerticaStatement (VerticaCreateProjectionStatement CreateProjection{..}) = do
     WithColumns createProjectionQuery' columns <- resolveQueryWithColumns createProjectionQuery
     bindColumns columns $ do
-        createProjectionSegmentation' <- overJust resolveSegmentation createProjectionSegmentation
+        createProjectionSegmentation' <- traverse resolveSegmentation createProjectionSegmentation
         pure $ VerticaCreateProjectionStatement CreateProjection
             { createProjectionQuery = createProjectionQuery'
             , createProjectionSegmentation = createProjectionSegmentation'

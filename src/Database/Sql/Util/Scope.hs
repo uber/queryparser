@@ -44,8 +44,8 @@ module Database.Sql.Util.Scope
 import Prelude hiding ((&&), (||), not)
 import Data.Predicate.Class
 import Data.Maybe (mapMaybe)
-import Data.Maybe.More (overJust)
 import Data.Either (lefts, rights)
+import Data.Traversable (traverse)
 import Database.Sql.Type
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -242,11 +242,11 @@ queryColumnNames (QueryOffset _ _ query) = queryColumnNames query
 
 resolveSelectAndOrders :: Select RawNames a -> [Order RawNames a] -> Resolver (WithColumnsAndOrders (Select ResolvedNames)) a
 resolveSelectAndOrders Select{..} orders = do
-    (selectFrom', columns) <- overJust resolveSelectFrom selectFrom >>= \case
+    (selectFrom', columns) <- traverse resolveSelectFrom selectFrom >>= \case
         Nothing -> pure (Nothing, [])
         Just (WithColumns selectFrom' columns) -> pure (Just selectFrom', columns)
 
-    selectTimeseries' <- overJust (bindColumns columns . resolveSelectTimeseries) selectTimeseries
+    selectTimeseries' <- traverse (bindColumns columns . resolveSelectTimeseries) selectTimeseries
 
     maybeBindTimeSlice selectTimeseries' $ do
         selectCols' <- bindColumns columns $ resolveSelectColumns columns selectCols
@@ -256,10 +256,10 @@ resolveSelectAndOrders Select{..} orders = do
 
         SelectScope{..} <- (\ f -> f columns selectedAliases) <$> asks selectScope
 
-        selectHaving' <- bindForHaving $ overJust resolveSelectHaving selectHaving
-        selectWhere' <- bindForWhere $ overJust resolveSelectWhere selectWhere
-        selectGroup' <- bindForGroup $ overJust (resolveSelectGroup selectedExprs) selectGroup
-        selectNamedWindow' <- bindForNamedWindow $ overJust resolveSelectNamedWindow selectNamedWindow
+        selectHaving' <- bindForHaving $ traverse resolveSelectHaving selectHaving
+        selectWhere' <- bindForWhere $ traverse resolveSelectWhere selectWhere
+        selectGroup' <- bindForGroup $ traverse (resolveSelectGroup selectedExprs) selectGroup
+        selectNamedWindow' <- bindForNamedWindow $ traverse resolveSelectNamedWindow selectNamedWindow
         orders' <- bindForOrder $ mapM (resolveOrder selectedExprs) orders
         let select = Select { selectCols = selectCols'
                             , selectFrom = selectFrom'
@@ -341,7 +341,7 @@ resolveDelete (Delete info tableName expr) = do
     when (tableType /= Table) $ fail $ "delete only works on tables; can't delete on a " ++ show tableType
     let QTableName tableInfo _ _ = tableName
     bindColumns [(Just $ RTableRef fqtn table, map (\ (QColumnName () None column) -> RColumnRef $ QColumnName tableInfo (pure fqtn) column) columnsList)] $ do
-        expr' <- overJust resolveExpr expr
+        expr' <- traverse resolveExpr expr
         pure $ Delete info tableName' expr'
 
 
@@ -357,7 +357,7 @@ resolveCreateTable CreateTable{..} = do
 
     WithColumns createTableDefinition' columns <- resolveTableDefinition fqtn createTableDefinition
     bindColumns columns $ do
-        createTableExtra' <- overJust (resolveCreateTableExtra (Proxy :: Proxy d)) createTableExtra
+        createTableExtra' <- traverse (resolveCreateTableExtra (Proxy :: Proxy d)) createTableExtra
         pure $ CreateTable
             { createTableName = createTableName'
             , createTableDefinition = createTableDefinition'
@@ -413,7 +413,7 @@ resolveColumnOrConstraint (ColumnOrConstraintConstraint constraint) = pure $ Col
 
 resolveColumnDefinition :: ColumnDefinition d RawNames a -> Resolver (ColumnDefinition d ResolvedNames) a
 resolveColumnDefinition ColumnDefinition{..} = do
-    columnDefinitionDefault' <- overJust resolveExpr columnDefinitionDefault
+    columnDefinitionDefault' <- traverse resolveExpr columnDefinitionDefault
     pure $ ColumnDefinition
         { columnDefinitionDefault = columnDefinitionDefault'
         , ..
@@ -521,13 +521,13 @@ resolveSelection _ (SelectExpr info alias expr) = SelectExpr info alias <$> reso
 resolveExpr :: Expr RawNames a -> Resolver (Expr ResolvedNames) a
 resolveExpr (BinOpExpr info op lhs rhs) = BinOpExpr info op <$> resolveExpr lhs <*> resolveExpr rhs
 
-resolveExpr (CaseExpr info whens else_) = CaseExpr info <$> mapM resolveWhen whens <*> overJust resolveExpr else_
+resolveExpr (CaseExpr info whens else_) = CaseExpr info <$> mapM resolveWhen whens <*> traverse resolveExpr else_
   where
     resolveWhen (when_, then_) = (,) <$> resolveExpr when_ <*> resolveExpr then_
 
 resolveExpr (UnOpExpr info op expr) = UnOpExpr info op <$> resolveExpr expr
 resolveExpr (LikeExpr info op escape pattern expr) = do
-    escape' <- overJust (fmap Escape . resolveExpr . escapeExpr) escape
+    escape' <- traverse (fmap Escape . resolveExpr . escapeExpr) escape
     pattern' <- Pattern <$> resolveExpr (patternExpr pattern)
     expr' <- resolveExpr expr
     pure $ LikeExpr info op escape' pattern' expr'
@@ -548,7 +548,7 @@ resolveExpr (OverlapsExpr info range1 range2) = OverlapsExpr info <$> resolveRan
     resolveRange (from, to) = (,) <$> resolveExpr from <*> resolveExpr to
 
 resolveExpr (FunctionExpr info name distinct args params filter' over) =
-    FunctionExpr info name distinct <$> mapM resolveExpr args <*> mapM resolveParam params <*> overJust resolveFilter filter' <*> overJust resolveOverSubExpr over
+    FunctionExpr info name distinct <$> mapM resolveExpr args <*> mapM resolveParam params <*> traverse resolveFilter filter' <*> traverse resolveOverSubExpr over
   where
     resolveParam (param, expr) = (param,) <$> resolveExpr expr
     -- T482568: expand named windows on resolve
@@ -580,7 +580,7 @@ resolveWindowExpr :: WindowExpr RawNames a
                   -> Resolver (WindowExpr ResolvedNames) a
 resolveWindowExpr WindowExpr{..} =
   do
-    windowExprPartition' <- overJust resolvePartition windowExprPartition
+    windowExprPartition' <- traverse resolvePartition windowExprPartition
     windowExprOrder' <- mapM (resolveOrder []) windowExprOrder
     pure $ WindowExpr
         { windowExprPartition = windowExprPartition'
@@ -794,7 +794,7 @@ resolveSelectWhere (SelectWhere info expr) = SelectWhere info <$> resolveExpr ex
 
 resolveSelectTimeseries :: SelectTimeseries RawNames a -> Resolver (SelectTimeseries ResolvedNames) a
 resolveSelectTimeseries SelectTimeseries{..} = do
-    selectTimeseriesPartition' <- overJust resolvePartition selectTimeseriesPartition
+    selectTimeseriesPartition' <- traverse resolvePartition selectTimeseriesPartition
     selectTimeseriesOrder' <- resolveExpr selectTimeseriesOrder
     pure $ SelectTimeseries
         { selectTimeseriesPartition = selectTimeseriesPartition'
