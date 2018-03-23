@@ -9,6 +9,8 @@ maintainer:          heli@uber.com
 -- copyright:
 category:            Database
 build-type:          Simple
+extra-source-files:
+                     CHANGELOG.md
 cabal-version:       >=1.10
 
 library
