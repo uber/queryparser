@@ -1,7 +1,9 @@
 name:                queryparser-demo
 version:             0.1.0.0
--- synopsis:
--- description:
+synopsis:            Demo package containing queryparser examples
+description:
+            Library containing sample queryparser calls, for user exploration and
+            playgrounding.
 license:             MIT
 license-file:        LICENSE
 author:              Heli Wang, David Thomas, Matt Halverson

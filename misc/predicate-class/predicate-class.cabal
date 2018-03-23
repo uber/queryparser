@@ -1,7 +1,9 @@
 name:                predicate-class
-version:             0.1.0.0
--- synopsis:
--- description:
+version:             0.1.0.1
+synopsis:            Helper class for passing context along a predicate value
+description:
+            Helper class for passing context along a predicate value
+            Used as a helper in queryparser
 license:             MIT
 license-file:        LICENSE
 author:              David Thomas
