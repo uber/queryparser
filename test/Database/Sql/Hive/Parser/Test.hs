@@ -428,6 +428,7 @@ testParser_hiveSuite = test
       , "SET mapreduce.job.queuename=foo-bar-baz;"
       , "SET x*x=1*5;"
       , "SET foo-bar-baz=foo-bar-baz;"
+      , "SET mapreduce.job.queuename;"
       , "SET;"
       , "SET -v;"
       , TL.unlines
