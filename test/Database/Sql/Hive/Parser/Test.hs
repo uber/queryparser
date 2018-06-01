@@ -284,6 +284,7 @@ testParser_hiveSuite = test
         , "OUTPUTFORMAT \"org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat\""
         , "AS SELECT * FROM tomato;"
         ]
+      , "CREATE TABLE potato TBLPROPERTIES(\'EXTERNAL\'=\'FALSE\') AS SELECT 1"
       , "CREATE TABLE potato STORED AS PARQUET LOCATION 'foo' AS SELECT * FROM tomato;"
       , "ALTER TABLE foo SET LOCATION 'hdfs://thingy';"
       , "ALTER TABLE foo PARTITION (bar='2015-10-15') SET LOCATION 'hdfs://thingy';"
@@ -571,7 +572,7 @@ testParser_hiveSuite = test
                       (Range (Position 1 17 17) (Position 1 41 41))
                       (
                         (
-                          ColumnOrConstraintColumn 
+                          ColumnOrConstraintColumn
                           ( ColumnDefinition
                             { columnDefinitionInfo = (Range (Position 1 18 18) (Position 1 28 28))
                             , columnDefinitionName =
@@ -591,7 +592,7 @@ testParser_hiveSuite = test
                         :|
                         [
                           (
-                            ColumnOrConstraintColumn 
+                            ColumnOrConstraintColumn
                             ( ColumnDefinition
                               { columnDefinitionInfo = (Range (Position 1 30 30) (Position 1 40 40))
                               , columnDefinitionName =

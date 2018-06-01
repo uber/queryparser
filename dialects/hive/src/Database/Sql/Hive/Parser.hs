@@ -936,14 +936,14 @@ createTableStandardP = do
             , getInfo <$> locationP
             ]
 
+    tblProperties <- option Nothing (Just <$> tblPropertiesP)
+
     createTableDefinition <- case tableDefColumns of
         Just definition -> return definition
         Nothing -> choice
             [ createTableAsP
             , createTableNoColumnInfoP e2
             ]
-
-    tblProperties <- option Nothing (Just <$> tblPropertiesP)
 
     let e3 = getInfo createTableDefinition
         e4 = fromMaybe e2 (hiveMetadataPropertiesInfo <$> tblProperties)
