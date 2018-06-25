@@ -249,7 +249,7 @@ resolveSelectAndOrders Select{..} orders = do
     selectTimeseries' <- traverse (bindColumns columns . resolveSelectTimeseries) selectTimeseries
 
     maybeBindTimeSlice selectTimeseries' $ do
-        selectCols' <- bindColumns columns $ resolveSelectColumns columns selectCols
+        selectCols' <- bindColumns columns $ resolveSelectColumns selectCols
 
         let selectedAliases = selectionNames =<< selectColumnsList selectCols'
             selectedExprs = selectionExprs =<< selectColumnsList selectCols'
@@ -488,8 +488,8 @@ resolveCreateSchema CreateSchema{..} = do
         }
 
 
-resolveSelectColumns :: ColumnSet a -> SelectColumns RawNames a -> Resolver (SelectColumns ResolvedNames) a
-resolveSelectColumns columns (SelectColumns info selections) = SelectColumns info <$> mapM (resolveSelection columns) selections
+resolveSelectColumns :: SelectColumns RawNames a -> Resolver (SelectColumns ResolvedNames) a
+resolveSelectColumns (SelectColumns info selections) = SelectColumns info <$> mapM resolveSelection selections
 
 
 qualifiedOnly :: [(Maybe a, b)] -> [(a, b)]
@@ -497,25 +497,28 @@ qualifiedOnly = mapMaybe (\(mTable, cs) -> case mTable of
                               (Just t) -> Just (t, cs)
                               Nothing -> Nothing)
 
-resolveSelection :: ColumnSet a -> Selection RawNames a -> Resolver (Selection ResolvedNames) a
-resolveSelection columns (SelectStar info Nothing Unused) = do
+resolveSelection :: Selection RawNames a -> Resolver (Selection ResolvedNames) a
+resolveSelection (SelectStar info Nothing Unused) = do
+    columns <- asks (boundColumns . bindings)
     pure $ SelectStar info Nothing $ StarColumnNames $ map (const info <$>) $ snd =<< columns
 
-resolveSelection columns (SelectStar info (Just oqtn@(QTableName _ (Just schema) _)) Unused) = do
+resolveSelection (SelectStar info (Just oqtn@(QTableName _ (Just schema) _)) Unused) = do
+    columns <- asks (boundColumns . bindings)
     let qualifiedColumns = qualifiedOnly columns
     case filter ((resolvedTableHasSchema schema && resolvedTableHasName oqtn) . fst) qualifiedColumns of
         [] -> throwError $ UnintroducedTable oqtn
         [(t, cs)] -> pure $ SelectStar info (Just t) $ StarColumnNames $ map (const info <$>) cs
         _ -> throwError $ AmbiguousTable oqtn
 
-resolveSelection columns (SelectStar info (Just oqtn@(QTableName tableInfo Nothing table)) Unused) = do
+resolveSelection (SelectStar info (Just oqtn@(QTableName tableInfo Nothing table)) Unused) = do
+    columns <- asks (boundColumns . bindings)
     let qualifiedColumns = qualifiedOnly columns
     case filter (resolvedTableHasName oqtn . fst) qualifiedColumns of
         [] -> throwError $ UnintroducedTable $ QTableName tableInfo Nothing table
         [(t, cs)] -> pure $ SelectStar info (Just t) $ StarColumnNames $ map (const info <$>) cs
         _ -> throwError $ AmbiguousTable $ QTableName tableInfo Nothing table
 
-resolveSelection _ (SelectExpr info alias expr) = SelectExpr info alias <$> resolveExpr expr
+resolveSelection (SelectExpr info alias expr) = SelectExpr info alias <$> resolveExpr expr
 
 
 resolveExpr :: Expr RawNames a -> Resolver (Expr ResolvedNames) a
