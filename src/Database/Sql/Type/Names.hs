@@ -182,8 +182,7 @@ type FQSchemaName = QSchemaName Identity
 mkNormalSchema :: Alternative f => Text -> a -> QSchemaName f a
 mkNormalSchema name info = QSchemaName info empty name NormalSchema
 
-instance Hashable (DatabaseName a) where
-    hashWithSalt salt (DatabaseName _ database) = salt `hashWithSalt` database
+instance Hashable a => Hashable (DatabaseName a)
 
 instance Arbitrary a => Arbitrary (DatabaseName a) where
     arbitrary = do
@@ -194,8 +193,7 @@ instance Arbitrary a => Arbitrary (DatabaseName a) where
 
 instance Hashable SchemaType
 
-instance Hashable (f (DatabaseName a)) => Hashable (QSchemaName f a) where
-    hashWithSalt salt (QSchemaName _ database schema schemaType) = salt `hashWithSalt` database `hashWithSalt` schema `hashWithSalt` schemaType
+instance (Hashable (f (DatabaseName a)), Hashable a) => Hashable (QSchemaName f a)
 
 instance (Arbitrary (f (DatabaseName a)), Arbitrary a) => Arbitrary (QSchemaName f a) where
     arbitrary = oneof
@@ -320,9 +318,7 @@ data RUsingColumn a = RUsingColumn (RColumnRef a) (RColumnRef a)
                , Read, Show, Eq, Ord
                , Functor, Foldable, Traversable)
 
-instance Hashable (f (QSchemaName f a)) => Hashable (QTableName f a) where
-    hashWithSalt salt (QTableName _ schema table) = salt `hashWithSalt` schema `hashWithSalt` table
-
+instance (Hashable (f (QSchemaName f a)), Hashable a) => Hashable (QTableName f a)
 
 instance (Arbitrary (f (QSchemaName f a)), Arbitrary a) => Arbitrary (QTableName f a) where
     arbitrary = do
@@ -372,6 +368,8 @@ deriving instance (Eq (f (QTableName f a)), Eq a) => Eq (QColumnName f a)
 deriving instance (Ord (f (QTableName f a)), Ord a) => Ord (QColumnName f a)
 deriving instance (Read (f (QTableName f a)), Read a) => Read (QColumnName f a)
 deriving instance (Show (f (QTableName f a)), Show a) => Show (QColumnName f a)
+
+instance (Hashable (f (QTableName f a)), Hashable a) => Hashable (QColumnName f a)
 
 
 type UQColumnName = QColumnName No
