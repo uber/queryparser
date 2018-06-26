@@ -83,6 +83,7 @@ library
 
   -- Modules included in this library but not exported.
   other-modules:       Test.QuickCheck
+                     , Data.Hashable
 
   default-extensions:  OverloadedStrings
                      , LambdaCase
