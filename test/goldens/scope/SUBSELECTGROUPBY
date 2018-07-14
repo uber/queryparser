@@ -1,0 +1,5 @@
+(Left
+   (MissingColumn
+      (QColumnName{columnNameInfo = 20, columnNameTable = Nothing,
+                   columnNameName = "y"})),
+ [])

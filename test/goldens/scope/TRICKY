@@ -1,0 +1,53 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "?column?" (ColumnAliasId 1)]
+                                         (SubqueryExpr 6
+                                            (QuerySelect 7
+                                               (Select{selectInfo = 8,
+                                                       selectCols =
+                                                         SelectColumns{selectColumnsInfo = 9,
+                                                                       selectColumnsList =
+                                                                         [SelectExpr 10
+                                                                            [ColumnAlias 11
+                                                                               "?column?"
+                                                                               (ColumnAliasId 2)]
+                                                                            (ColumnExpr 12
+                                                                               (RColumnAlias
+                                                                                  (ColumnAlias 14
+                                                                                     "x"
+                                                                                     (ColumnAliasId
+                                                                                        4))))]},
+                                                       selectFrom = Nothing, selectWhere = Nothing,
+                                                       selectTimeseries = Nothing,
+                                                       selectGroup = Nothing,
+                                                       selectHaving = Nothing,
+                                                       selectNamedWindow = Nothing,
+                                                       selectDistinct = Distinct False})))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 15
+                           [TablishSubQuery 16
+                              (TablishAliasesT (TableAlias 17 "foo" (TableAliasId 3)))
+                              (QuerySelect 18
+                                 (Select{selectInfo = 19,
+                                         selectCols =
+                                           SelectColumns{selectColumnsInfo = 20,
+                                                         selectColumnsList =
+                                                           [SelectExpr 21
+                                                              [ColumnAlias 22 "x" (ColumnAliasId 4)]
+                                                              (ConstantExpr 23
+                                                                 (NumericConstant 24 "1"))]},
+                                         selectFrom = Nothing, selectWhere = Nothing,
+                                         selectTimeseries = Nothing, selectGroup = Nothing,
+                                         selectHaving = Nothing, selectNamedWindow = Nothing,
+                                         selectDistinct = Distinct False}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [])

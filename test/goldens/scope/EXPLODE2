@@ -1,0 +1,81 @@
+(Right
+   (HiveStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "col" (ColumnAliasId 1)]
+                                         (ColumnExpr 6
+                                            (RColumnAlias
+                                               (ColumnAlias 8 "col" (ColumnAliasId (-1)))))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 9
+                           [TablishLateralView 10
+                              (LateralView{lateralViewInfo = 11, lateralViewOuter = Nothing,
+                                           lateralViewExprs =
+                                             [FunctionExpr 12
+                                                (QFunctionName{functionNameInfo = 13,
+                                                               functionNameSchema = Nothing,
+                                                               functionNameName = "explode"})
+                                                (Distinct False)
+                                                [ColumnExpr 14
+                                                   (RColumnRef
+                                                      (QColumnName{columnNameInfo = 16,
+                                                                   columnNameTable =
+                                                                     Identity
+                                                                       (QTableName{tableNameInfo =
+                                                                                     16,
+                                                                                   tableNameSchema =
+                                                                                     Identity
+                                                                                       (QSchemaName{schemaNameInfo
+                                                                                                      =
+                                                                                                      16,
+                                                                                                    schemaNameDatabase
+                                                                                                      =
+                                                                                                      Identity
+                                                                                                        (DatabaseName
+                                                                                                           16
+                                                                                                           "default_db"),
+                                                                                                    schemaNameName
+                                                                                                      =
+                                                                                                      "public",
+                                                                                                    schemaNameType
+                                                                                                      =
+                                                                                                      NormalSchema}),
+                                                                                   tableNameName =
+                                                                                     "foo"}),
+                                                                   columnNameName = "a"}))]
+                                                []
+                                                Nothing
+                                                Nothing],
+                                           lateralViewWithOrdinality = False,
+                                           lateralViewAliases =
+                                             TablishAliasesT
+                                               (TableAlias 17 "bar" (TableAliasId 0))})
+                              (Just
+                                 (TablishTable 18 TablishAliasesNone
+                                    (RTableRef
+                                       (QTableName{tableNameInfo = 19,
+                                                   tableNameSchema =
+                                                     Identity
+                                                       (QSchemaName{schemaNameInfo = 19,
+                                                                    schemaNameDatabase =
+                                                                      Identity
+                                                                        (DatabaseName 19
+                                                                           "default_db"),
+                                                                    schemaNameName = "public",
+                                                                    schemaNameType = NormalSchema}),
+                                                   tableNameName = "foo"})
+                                       (SchemaMember{tableType = Table, persistence = Persistent,
+                                                     columnsList =
+                                                       [QColumnName{columnNameInfo = (),
+                                                                    columnNameTable = None,
+                                                                    columnNameName = "a"}],
+                                                     viewQuery = Nothing}))))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [])

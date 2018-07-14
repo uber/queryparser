@@ -1,0 +1,5 @@
+(Left
+   (UnintroducedTable
+      (QTableName{tableNameInfo = 7, tableNameSchema = Nothing,
+                  tableNameName = "foo"})),
+ [])

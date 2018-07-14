@@ -1,0 +1,83 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QueryOrder 1
+            [Order 2
+               (PositionOrExprExpr
+                  (ColumnExpr 3
+                     (RColumnRef
+                        (QColumnName{columnNameInfo = 4,
+                                     columnNameTable =
+                                       Identity
+                                         (QTableName{tableNameInfo = 4,
+                                                     tableNameSchema =
+                                                       Identity
+                                                         (QSchemaName{schemaNameInfo = 4,
+                                                                      schemaNameDatabase =
+                                                                        Identity
+                                                                          (DatabaseName 4
+                                                                             "default_db"),
+                                                                      schemaNameName = "public",
+                                                                      schemaNameType =
+                                                                        NormalSchema}),
+                                                     tableNameName = "foo"}),
+                                     columnNameName = "a"}))))
+               (OrderDesc (Just 5))
+               (NullsAuto Nothing)]
+            (QuerySelect 6
+               (Select{selectInfo = 7,
+                       selectCols =
+                         SelectColumns{selectColumnsInfo = 8,
+                                       selectColumnsList =
+                                         [SelectStar 9 Nothing
+                                            (StarColumnNames
+                                               [RColumnRef
+                                                  (QColumnName{columnNameInfo = 9,
+                                                               columnNameTable =
+                                                                 Identity
+                                                                   (QTableName{tableNameInfo = 9,
+                                                                               tableNameSchema =
+                                                                                 Identity
+                                                                                   (QSchemaName{schemaNameInfo
+                                                                                                  =
+                                                                                                  9,
+                                                                                                schemaNameDatabase
+                                                                                                  =
+                                                                                                  Identity
+                                                                                                    (DatabaseName
+                                                                                                       9
+                                                                                                       "default_db"),
+                                                                                                schemaNameName
+                                                                                                  =
+                                                                                                  "public",
+                                                                                                schemaNameType
+                                                                                                  =
+                                                                                                  NormalSchema}),
+                                                                               tableNameName =
+                                                                                 "foo"}),
+                                                               columnNameName = "a"})])]},
+                       selectFrom =
+                         Just
+                           (SelectFrom 10
+                              [TablishTable 11 TablishAliasesNone
+                                 (RTableRef
+                                    (QTableName{tableNameInfo = 12,
+                                                tableNameSchema =
+                                                  Identity
+                                                    (QSchemaName{schemaNameInfo = 12,
+                                                                 schemaNameDatabase =
+                                                                   Identity
+                                                                     (DatabaseName 12 "default_db"),
+                                                                 schemaNameName = "public",
+                                                                 schemaNameType = NormalSchema}),
+                                                tableNameName = "foo"})
+                                    (SchemaMember{tableType = Table, persistence = Persistent,
+                                                  columnsList =
+                                                    [QColumnName{columnNameInfo = (),
+                                                                 columnNameTable = None,
+                                                                 columnNameName = "a"}],
+                                                  viewQuery = Nothing}))]),
+                       selectWhere = Nothing, selectTimeseries = Nothing,
+                       selectGroup = Nothing, selectHaving = Nothing,
+                       selectNamedWindow = Nothing, selectDistinct = Distinct False}))))),
+ [])

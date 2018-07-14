@@ -1,0 +1,75 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "x" (ColumnAliasId 1)]
+                                         (ColumnExpr 6
+                                            (RColumnRef
+                                               (QColumnName{columnNameInfo = 8,
+                                                            columnNameTable =
+                                                              Identity
+                                                                (QTableName{tableNameInfo = 8,
+                                                                            tableNameSchema =
+                                                                              Identity
+                                                                                (QSchemaName{schemaNameInfo
+                                                                                               = 8,
+                                                                                             schemaNameDatabase
+                                                                                               =
+                                                                                               Identity
+                                                                                                 (DatabaseName
+                                                                                                    8
+                                                                                                    "default_db"),
+                                                                                             schemaNameName
+                                                                                               =
+                                                                                               "public",
+                                                                                             schemaNameType
+                                                                                               =
+                                                                                               NormalSchema}),
+                                                                            tableNameName = "qux"}),
+                                                            columnNameName = "x"})))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 9
+                           [TablishTable 10 TablishAliasesNone
+                              (RTableRef
+                                 (QTableName{tableNameInfo = 12,
+                                             tableNameSchema =
+                                               Identity
+                                                 (QSchemaName{schemaNameInfo = 11,
+                                                              schemaNameDatabase =
+                                                                Identity
+                                                                  (DatabaseName 11 "default_db"),
+                                                              schemaNameName = "public",
+                                                              schemaNameType = NormalSchema}),
+                                             tableNameName = "qux"})
+                                 (SchemaMember{tableType = Table, persistence = Persistent,
+                                               columnsList = [], viewQuery = Nothing}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [MissingTable
+    (QTableName{tableNameInfo = 12,
+                tableNameSchema =
+                  Just
+                    (QSchemaName{schemaNameInfo = 11,
+                                 schemaNameDatabase = Just (DatabaseName 11 "default_db"),
+                                 schemaNameName = "public", schemaNameType = NormalSchema}),
+                tableNameName = "qux"}),
+  MissingColumn
+    (QColumnName{columnNameInfo = 8,
+                 columnNameTable =
+                   Just
+                     (QTableName{tableNameInfo = 7,
+                                 tableNameSchema =
+                                   Just
+                                     (QSchemaName{schemaNameInfo = 8,
+                                                  schemaNameDatabase =
+                                                    Just (DatabaseName 8 "default_db"),
+                                                  schemaNameName = "public",
+                                                  schemaNameType = NormalSchema}),
+                                 tableNameName = "qux"}),
+                 columnNameName = "x"})])

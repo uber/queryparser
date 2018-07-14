@@ -1,0 +1,10 @@
+(Left
+   (MissingTable
+      (QTableName{tableNameInfo = 12,
+                  tableNameSchema =
+                    Just
+                      (QSchemaName{schemaNameInfo = 11,
+                                   schemaNameDatabase = Just (DatabaseName 11 "default_db"),
+                                   schemaNameName = "public", schemaNameType = NormalSchema}),
+                  tableNameName = "qux"})),
+ [])
