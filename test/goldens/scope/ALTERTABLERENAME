@@ -1,0 +1,101 @@
+(Right
+   (VerticaMultipleRenameStatement
+      (MultipleRename 1
+         [AlterTableRenameTable 2
+            (RTableName
+               (QTableName{tableNameInfo = 3,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 3,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 3 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "foo"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"}],
+                             viewQuery = Nothing}))
+            (RTableName
+               (QTableName{tableNameInfo = 4,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 3,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 3 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "qux"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"}],
+                             viewQuery = Nothing})),
+          AlterTableRenameTable 5
+            (RTableName
+               (QTableName{tableNameInfo = 6,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 6,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 6 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "bar"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"},
+                                QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "b"}],
+                             viewQuery = Nothing}))
+            (RTableName
+               (QTableName{tableNameInfo = 7,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 6,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 6 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "foo"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"},
+                                QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "b"}],
+                             viewQuery = Nothing})),
+          AlterTableRenameTable 8
+            (RTableName
+               (QTableName{tableNameInfo = 9,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 9,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 9 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "qux"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"}],
+                             viewQuery = Nothing}))
+            (RTableName
+               (QTableName{tableNameInfo = 10,
+                           tableNameSchema =
+                             Identity
+                               (QSchemaName{schemaNameInfo = 9,
+                                            schemaNameDatabase =
+                                              Identity (DatabaseName 9 "default_db"),
+                                            schemaNameName = "public",
+                                            schemaNameType = NormalSchema}),
+                           tableNameName = "bar"})
+               (SchemaMember{tableType = Table, persistence = Persistent,
+                             columnsList =
+                               [QColumnName{columnNameInfo = (), columnNameTable = None,
+                                            columnNameName = "a"}],
+                             viewQuery = Nothing}))])),
+ [])

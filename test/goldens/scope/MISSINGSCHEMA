@@ -1,0 +1,6 @@
+(Left
+   (MissingSchema
+      (QSchemaName{schemaNameInfo = 9,
+                   schemaNameDatabase = Just (DatabaseName 9 "default_db"),
+                   schemaNameName = "missing", schemaNameType = NormalSchema})),
+ [])

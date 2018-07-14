@@ -1,0 +1,42 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "y" (ColumnAliasId 1)]
+                                         (ColumnExpr 6
+                                            (RColumnAlias (ColumnAlias 7 "x" (ColumnAliasId 2))))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 8
+                           [TablishSubQuery 9
+                              (TablishAliasesT (TableAlias 10 "foo" (TableAliasId 3)))
+                              (QuerySelect 11
+                                 (Select{selectInfo = 12,
+                                         selectCols =
+                                           SelectColumns{selectColumnsInfo = 13,
+                                                         selectColumnsList =
+                                                           [SelectExpr 14
+                                                              [ColumnAlias 15 "x" (ColumnAliasId 2)]
+                                                              (ConstantExpr 16
+                                                                 (NumericConstant 17 "1"))]},
+                                         selectFrom = Nothing, selectWhere = Nothing,
+                                         selectTimeseries = Nothing, selectGroup = Nothing,
+                                         selectHaving = Nothing, selectNamedWindow = Nothing,
+                                         selectDistinct = Distinct False}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup =
+                      Just
+                        (SelectGroup{selectGroupInfo = 18,
+                                     selectGroupGroupingElements =
+                                       [GroupingElementExpr 19
+                                          (PositionOrExprExpr
+                                             (ColumnExpr 19
+                                                (RColumnAlias
+                                                   (ColumnAlias 20 "y" (ColumnAliasId 1)))))]}),
+                    selectHaving = Nothing, selectNamedWindow = Nothing,
+                    selectDistinct = Distinct False})))),
+ [])

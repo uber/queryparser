@@ -1,0 +1,58 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "a" (ColumnAliasId 1)]
+                                         (ColumnExpr 6
+                                            (RColumnRef
+                                               (QColumnName{columnNameInfo = 7,
+                                                            columnNameTable =
+                                                              Identity
+                                                                (QTableName{tableNameInfo = 7,
+                                                                            tableNameSchema =
+                                                                              Identity
+                                                                                (QSchemaName{schemaNameInfo
+                                                                                               = 7,
+                                                                                             schemaNameDatabase
+                                                                                               =
+                                                                                               Identity
+                                                                                                 (DatabaseName
+                                                                                                    7
+                                                                                                    "default_db"),
+                                                                                             schemaNameName
+                                                                                               =
+                                                                                               "public",
+                                                                                             schemaNameType
+                                                                                               =
+                                                                                               NormalSchema}),
+                                                                            tableNameName = "foo"}),
+                                                            columnNameName = "a"})))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 8
+                           [TablishTable 9 TablishAliasesNone
+                              (RTableRef
+                                 (QTableName{tableNameInfo = 10,
+                                             tableNameSchema =
+                                               Identity
+                                                 (QSchemaName{schemaNameInfo = 10,
+                                                              schemaNameDatabase =
+                                                                Identity
+                                                                  (DatabaseName 10 "default_db"),
+                                                              schemaNameName = "public",
+                                                              schemaNameType = NormalSchema}),
+                                             tableNameName = "foo"})
+                                 (SchemaMember{tableType = Table, persistence = Persistent,
+                                               columnsList =
+                                                 [QColumnName{columnNameInfo = (),
+                                                              columnNameTable = None,
+                                                              columnNameName = "a"}],
+                                               viewQuery = Nothing}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [])

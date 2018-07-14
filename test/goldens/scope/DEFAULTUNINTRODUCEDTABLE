@@ -1,0 +1,63 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectExpr 4 [ColumnAlias 5 "x" (ColumnAliasId 1)]
+                                         (ColumnExpr 6
+                                            (RColumnRef
+                                               (QColumnName{columnNameInfo = 8,
+                                                            columnNameTable =
+                                                              Identity
+                                                                (QTableName{tableNameInfo = 7,
+                                                                            tableNameSchema =
+                                                                              Identity
+                                                                                (QSchemaName{schemaNameInfo
+                                                                                               = 7,
+                                                                                             schemaNameDatabase
+                                                                                               =
+                                                                                               Identity
+                                                                                                 (DatabaseName
+                                                                                                    7
+                                                                                                    "<unknown>"),
+                                                                                             schemaNameName
+                                                                                               =
+                                                                                               "<unknown>",
+                                                                                             schemaNameType
+                                                                                               =
+                                                                                               NormalSchema}),
+                                                                            tableNameName = "foo"}),
+                                                            columnNameName = "x"})))]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 9
+                           [TablishTable 10 TablishAliasesNone
+                              (RTableRef
+                                 (QTableName{tableNameInfo = 11,
+                                             tableNameSchema =
+                                               Identity
+                                                 (QSchemaName{schemaNameInfo = 11,
+                                                              schemaNameDatabase =
+                                                                Identity
+                                                                  (DatabaseName 11 "default_db"),
+                                                              schemaNameName = "public",
+                                                              schemaNameType = NormalSchema}),
+                                             tableNameName = "bar"})
+                                 (SchemaMember{tableType = Table, persistence = Persistent,
+                                               columnsList =
+                                                 [QColumnName{columnNameInfo = (),
+                                                              columnNameTable = None,
+                                                              columnNameName = "a"},
+                                                  QColumnName{columnNameInfo = (),
+                                                              columnNameTable = None,
+                                                              columnNameName = "b"}],
+                                               viewQuery = Nothing}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [UnintroducedTable
+    (QTableName{tableNameInfo = 7, tableNameSchema = Nothing,
+                tableNameName = "foo"})])

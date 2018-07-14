@@ -48,7 +48,7 @@ import           Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.List as L
 
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (fromMaybe)
 import Data.Monoid (Endo (..))
 import qualified Text.Parsec as P
 import           Text.Parsec ( chainl1, choice, many

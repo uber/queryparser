@@ -1,0 +1,110 @@
+(Right
+   (VerticaCreateProjectionStatement
+      (CreateProjection{createProjectionInfo = 1,
+                        createProjectionIfNotExists = Nothing,
+                        createProjectionName = ProjectionName 2 Nothing "foo_projection",
+                        createProjectionColumns = Nothing,
+                        createProjectionQuery =
+                          QuerySelect 3
+                            (Select{selectInfo = 4,
+                                    selectCols =
+                                      SelectColumns{selectColumnsInfo = 5,
+                                                    selectColumnsList =
+                                                      [SelectStar 6 Nothing
+                                                         (StarColumnNames
+                                                            [RColumnRef
+                                                               (QColumnName{columnNameInfo = 6,
+                                                                            columnNameTable =
+                                                                              Identity
+                                                                                (QTableName{tableNameInfo
+                                                                                              = 6,
+                                                                                            tableNameSchema
+                                                                                              =
+                                                                                              Identity
+                                                                                                (QSchemaName{schemaNameInfo
+                                                                                                               =
+                                                                                                               6,
+                                                                                                             schemaNameDatabase
+                                                                                                               =
+                                                                                                               Identity
+                                                                                                                 (DatabaseName
+                                                                                                                    6
+                                                                                                                    "default_db"),
+                                                                                                             schemaNameName
+                                                                                                               =
+                                                                                                               "public",
+                                                                                                             schemaNameType
+                                                                                                               =
+                                                                                                               NormalSchema}),
+                                                                                            tableNameName
+                                                                                              =
+                                                                                              "foo"}),
+                                                                            columnNameName =
+                                                                              "a"})])]},
+                                    selectFrom =
+                                      Just
+                                        (SelectFrom 7
+                                           [TablishTable 8 TablishAliasesNone
+                                              (RTableRef
+                                                 (QTableName{tableNameInfo = 9,
+                                                             tableNameSchema =
+                                                               Identity
+                                                                 (QSchemaName{schemaNameInfo = 9,
+                                                                              schemaNameDatabase =
+                                                                                Identity
+                                                                                  (DatabaseName 9
+                                                                                     "default_db"),
+                                                                              schemaNameName =
+                                                                                "public",
+                                                                              schemaNameType =
+                                                                                NormalSchema}),
+                                                             tableNameName = "foo"})
+                                                 (SchemaMember{tableType = Table,
+                                                               persistence = Persistent,
+                                                               columnsList =
+                                                                 [QColumnName{columnNameInfo = (),
+                                                                              columnNameTable =
+                                                                                None,
+                                                                              columnNameName =
+                                                                                "a"}],
+                                                               viewQuery = Nothing}))]),
+                                    selectWhere = Nothing, selectTimeseries = Nothing,
+                                    selectGroup = Nothing, selectHaving = Nothing,
+                                    selectNamedWindow = Nothing, selectDistinct = Distinct False}),
+                        createProjectionSegmentation =
+                          Just
+                            (SegmentedBy 10
+                               (FunctionExpr 11
+                                  (QFunctionName{functionNameInfo = 12,
+                                                 functionNameSchema = Nothing,
+                                                 functionNameName = "hash"})
+                                  (Distinct False)
+                                  [ColumnExpr 13
+                                     (RColumnRef
+                                        (QColumnName{columnNameInfo = 14,
+                                                     columnNameTable =
+                                                       Identity
+                                                         (QTableName{tableNameInfo = 14,
+                                                                     tableNameSchema =
+                                                                       Identity
+                                                                         (QSchemaName{schemaNameInfo
+                                                                                        = 14,
+                                                                                      schemaNameDatabase
+                                                                                        =
+                                                                                        Identity
+                                                                                          (DatabaseName
+                                                                                             14
+                                                                                             "default_db"),
+                                                                                      schemaNameName
+                                                                                        = "public",
+                                                                                      schemaNameType
+                                                                                        =
+                                                                                        NormalSchema}),
+                                                                     tableNameName = "foo"}),
+                                                     columnNameName = "a"}))]
+                                  []
+                                  Nothing
+                                  Nothing)
+                               (AllNodes 15 Nothing)),
+                        createProjectionKSafety = Just (KSafety 16 Nothing)})),
+ [])

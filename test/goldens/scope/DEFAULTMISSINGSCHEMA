@@ -1,0 +1,61 @@
+(Right
+   (VerticaStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectStar 4
+                                         (Just
+                                            (RTableRef
+                                               (QTableName{tableNameInfo = 10,
+                                                           tableNameSchema =
+                                                             Identity
+                                                               (QSchemaName{schemaNameInfo = 9,
+                                                                            schemaNameDatabase =
+                                                                              Identity
+                                                                                (DatabaseName 9
+                                                                                   "default_db"),
+                                                                            schemaNameName =
+                                                                              "missing",
+                                                                            schemaNameType =
+                                                                              NormalSchema}),
+                                                           tableNameName = "qux"})
+                                               (SchemaMember{tableType = Table,
+                                                             persistence = Persistent,
+                                                             columnsList = [],
+                                                             viewQuery = Nothing})))
+                                         (StarColumnNames [])]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 7
+                           [TablishTable 8 TablishAliasesNone
+                              (RTableRef
+                                 (QTableName{tableNameInfo = 10,
+                                             tableNameSchema =
+                                               Identity
+                                                 (QSchemaName{schemaNameInfo = 9,
+                                                              schemaNameDatabase =
+                                                                Identity
+                                                                  (DatabaseName 9 "default_db"),
+                                                              schemaNameName = "missing",
+                                                              schemaNameType = NormalSchema}),
+                                             tableNameName = "qux"})
+                                 (SchemaMember{tableType = Table, persistence = Persistent,
+                                               columnsList = [], viewQuery = Nothing}))]),
+                    selectWhere = Nothing, selectTimeseries = Nothing,
+                    selectGroup = Nothing, selectHaving = Nothing,
+                    selectNamedWindow = Nothing, selectDistinct = Distinct False})))),
+ [MissingSchema
+    (QSchemaName{schemaNameInfo = 9,
+                 schemaNameDatabase = Just (DatabaseName 9 "default_db"),
+                 schemaNameName = "missing", schemaNameType = NormalSchema}),
+  MissingTable
+    (QTableName{tableNameInfo = 10,
+                tableNameSchema =
+                  Just
+                    (QSchemaName{schemaNameInfo = 9,
+                                 schemaNameDatabase = Just (DatabaseName 9 "default_db"),
+                                 schemaNameName = "missing", schemaNameType = NormalSchema}),
+                tableNameName = "qux"})])

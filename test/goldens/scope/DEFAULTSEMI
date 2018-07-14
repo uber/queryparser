@@ -1,0 +1,161 @@
+(Right
+   (HiveStandardSqlStatement
+      (QueryStmt
+         (QuerySelect 1
+            (Select{selectInfo = 2,
+                    selectCols =
+                      SelectColumns{selectColumnsInfo = 3,
+                                    selectColumnsList =
+                                      [SelectStar 4 Nothing
+                                         (StarColumnNames
+                                            [RColumnRef
+                                               (QColumnName{columnNameInfo = 4,
+                                                            columnNameTable =
+                                                              Identity
+                                                                (QTableName{tableNameInfo = 4,
+                                                                            tableNameSchema =
+                                                                              Identity
+                                                                                (QSchemaName{schemaNameInfo
+                                                                                               = 4,
+                                                                                             schemaNameDatabase
+                                                                                               =
+                                                                                               Identity
+                                                                                                 (DatabaseName
+                                                                                                    4
+                                                                                                    "default_db"),
+                                                                                             schemaNameName
+                                                                                               =
+                                                                                               "public",
+                                                                                             schemaNameType
+                                                                                               =
+                                                                                               NormalSchema}),
+                                                                            tableNameName = "foo"}),
+                                                            columnNameName = "a"})])]},
+                    selectFrom =
+                      Just
+                        (SelectFrom 5
+                           [TablishJoin 6 (JoinSemi 7)
+                              (JoinOn
+                                 (BinOpExpr 7 (Operator "=")
+                                    (ColumnExpr 8
+                                       (RColumnRef
+                                          (QColumnName{columnNameInfo = 10,
+                                                       columnNameTable =
+                                                         Identity
+                                                           (QTableName{tableNameInfo = 10,
+                                                                       tableNameSchema =
+                                                                         Identity
+                                                                           (QSchemaName{schemaNameInfo
+                                                                                          = 10,
+                                                                                        schemaNameDatabase
+                                                                                          =
+                                                                                          Identity
+                                                                                            (DatabaseName
+                                                                                               10
+                                                                                               "default_db"),
+                                                                                        schemaNameName
+                                                                                          =
+                                                                                          "public",
+                                                                                        schemaNameType
+                                                                                          =
+                                                                                          NormalSchema}),
+                                                                       tableNameName = "foo"}),
+                                                       columnNameName = "a"})))
+                                    (ColumnExpr 11
+                                       (RColumnRef
+                                          (QColumnName{columnNameInfo = 13,
+                                                       columnNameTable =
+                                                         Identity
+                                                           (QTableName{tableNameInfo = 13,
+                                                                       tableNameSchema =
+                                                                         Identity
+                                                                           (QSchemaName{schemaNameInfo
+                                                                                          = 13,
+                                                                                        schemaNameDatabase
+                                                                                          =
+                                                                                          Identity
+                                                                                            (DatabaseName
+                                                                                               13
+                                                                                               "default_db"),
+                                                                                        schemaNameName
+                                                                                          =
+                                                                                          "public",
+                                                                                        schemaNameType
+                                                                                          =
+                                                                                          NormalSchema}),
+                                                                       tableNameName = "bar"}),
+                                                       columnNameName = "a"})))))
+                              (TablishTable 14 TablishAliasesNone
+                                 (RTableRef
+                                    (QTableName{tableNameInfo = 15,
+                                                tableNameSchema =
+                                                  Identity
+                                                    (QSchemaName{schemaNameInfo = 15,
+                                                                 schemaNameDatabase =
+                                                                   Identity
+                                                                     (DatabaseName 15 "default_db"),
+                                                                 schemaNameName = "public",
+                                                                 schemaNameType = NormalSchema}),
+                                                tableNameName = "foo"})
+                                    (SchemaMember{tableType = Table, persistence = Persistent,
+                                                  columnsList =
+                                                    [QColumnName{columnNameInfo = (),
+                                                                 columnNameTable = None,
+                                                                 columnNameName = "a"}],
+                                                  viewQuery = Nothing})))
+                              (TablishTable 16 TablishAliasesNone
+                                 (RTableRef
+                                    (QTableName{tableNameInfo = 17,
+                                                tableNameSchema =
+                                                  Identity
+                                                    (QSchemaName{schemaNameInfo = 17,
+                                                                 schemaNameDatabase =
+                                                                   Identity
+                                                                     (DatabaseName 17 "default_db"),
+                                                                 schemaNameName = "public",
+                                                                 schemaNameType = NormalSchema}),
+                                                tableNameName = "bar"})
+                                    (SchemaMember{tableType = Table, persistence = Persistent,
+                                                  columnsList =
+                                                    [QColumnName{columnNameInfo = (),
+                                                                 columnNameTable = None,
+                                                                 columnNameName = "a"},
+                                                     QColumnName{columnNameInfo = (),
+                                                                 columnNameTable = None,
+                                                                 columnNameName = "b"}],
+                                                  viewQuery = Nothing})))]),
+                    selectWhere =
+                      Just
+                        (SelectWhere 18
+                           (UnOpExpr 19 (Operator "NOT")
+                              (UnOpExpr 20 (Operator "ISNULL")
+                                 (ColumnExpr 21
+                                    (RColumnRef
+                                       (QColumnName{columnNameInfo = 23,
+                                                    columnNameTable =
+                                                      Identity
+                                                        (QTableName{tableNameInfo = 22,
+                                                                    tableNameSchema =
+                                                                      Identity
+                                                                        (QSchemaName{schemaNameInfo
+                                                                                       = 22,
+                                                                                     schemaNameDatabase
+                                                                                       =
+                                                                                       Identity
+                                                                                         (DatabaseName
+                                                                                            22
+                                                                                            "<unknown>"),
+                                                                                     schemaNameName
+                                                                                       =
+                                                                                       "<unknown>",
+                                                                                     schemaNameType
+                                                                                       =
+                                                                                       NormalSchema}),
+                                                                    tableNameName = "bar"}),
+                                                    columnNameName = "b"})))))),
+                    selectTimeseries = Nothing, selectGroup = Nothing,
+                    selectHaving = Nothing, selectNamedWindow = Nothing,
+                    selectDistinct = Distinct False})))),
+ [UnintroducedTable
+    (QTableName{tableNameInfo = 22, tableNameSchema = Nothing,
+                tableNameName = "bar"})])
