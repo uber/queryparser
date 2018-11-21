@@ -20,8 +20,6 @@
 
 module Database.Sql.Vertica.Scanner where
 
-import Prelude hiding ((&&), (||), not)
-
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
@@ -33,19 +31,18 @@ import Data.List (sortBy)
 import Data.Foldable (asum)
 import Data.Char (isAlphaNum, isAlpha, isSpace, isDigit)
 
+import Control.Applicative (liftA2, liftA3)
+
 import Database.Sql.Position
 import Database.Sql.Vertica.Token
 
-import Data.Predicate.Class
-
 import Numeric (readHex, readOct)
 
-
 isWordBody :: Char -> Bool
-isWordBody = isAlphaNum || (== '_') || (== '$')
+isWordBody = liftA3 (\x y z -> x || y || z) isAlphaNum (== '_') (== '$')
 
 isHSpace :: Char -> Bool
-isHSpace = isSpace && not (== '\n')
+isHSpace = liftA2 (&&) isSpace (/= '\n')
 
 operators :: [Text]
 operators = sortBy (flip compare)
@@ -115,7 +112,7 @@ tokenize = go (Position 1 0 0)
                     let p' = advanceHorizontal (1 + TL.length digits) p
                      in (TokNumber $ TL.cons '.' digits, p, p') : go p' rest
 
-        c | isDigit c -> let (num, rest) = TL.span (isDigit || (=='.')) t
+        c | isDigit c -> let (num, rest) = TL.span (liftA2 (||) isDigit (=='.')) t
                              p' = advanceHorizontal (TL.length num) p
                           in (TokNumber num, p, p') : go p' rest
 

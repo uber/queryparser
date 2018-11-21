@@ -25,12 +25,11 @@
 
 module Database.Sql.Type.Schema where
 
-import Prelude hiding ((&&), (||), not)
-
 import Database.Sql.Type.Names
 import Database.Sql.Type.TableProps
 import Database.Sql.Type.Scope
 
+import Control.Applicative (liftA2, liftA3)
 import Control.Arrow (first)
 import Control.Monad.Except
 import Control.Monad.Writer
@@ -39,8 +38,9 @@ import Data.Functor.Identity
 import qualified Data.HashMap.Strict as HMS
 
 import Data.Maybe (mapMaybe, maybeToList)
-import Data.Predicate.Class
 
+and3 :: Bool -> Bool -> Bool -> Bool
+and3 x y z = x && y && z
 
 overWithColumns :: (r a -> s a) -> WithColumns r a -> WithColumns s a
 overWithColumns f (WithColumns r cs) = WithColumns (f r) cs
@@ -216,7 +216,7 @@ makeCatalog catalog path currentDb = Catalog{..}
 
     catalogResolveColumnName :: forall a . [(Maybe (RTableRef a), [RColumnRef a])] -> OQColumnName a -> CatalogObjectResolver a (RColumnRef a)
     catalogResolveColumnName boundColumns oqcn@(QColumnName cInfo (Just oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schema schemaType)) table)) column) = do
-        case filter (maybe False (resolvedTableHasDatabase db && resolvedTableHasSchema oqsn && resolvedTableHasName oqtn) . fst) boundColumns of
+        case filter (maybe False (liftA3 and3 (resolvedTableHasDatabase db) (resolvedTableHasSchema oqsn) (resolvedTableHasName oqtn)) . fst) boundColumns of
             [] -> throwError $ UnintroducedTable oqtn
             _:_:_ -> throwError $ AmbiguousTable oqtn
             [(_, columns)] ->
@@ -234,7 +234,7 @@ makeCatalog catalog path currentDb = Catalog{..}
                     _ -> throwError $ AmbiguousColumn oqcn
 
     catalogResolveColumnName boundColumns oqcn@(QColumnName cInfo (Just oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo Nothing schema schemaType)) table)) column) = do
-        case filter (maybe False (resolvedTableHasSchema oqsn && resolvedTableHasName oqtn) . fst) boundColumns of
+        case filter (maybe False (liftA2 (&&) (resolvedTableHasSchema oqsn) (resolvedTableHasName oqtn)) . fst) boundColumns of
             [] -> throwError $ UnintroducedTable oqtn
             _:_:_ -> throwError $ AmbiguousTable oqtn
             [(table', columns)] ->
@@ -516,7 +516,7 @@ makeDefaultingCatalog catalog path currentDb = Catalog{..}
 
     catalogResolveColumnName :: forall a . [(Maybe (RTableRef a), [RColumnRef a])] -> OQColumnName a -> CatalogObjectResolver a (RColumnRef a)
     catalogResolveColumnName boundColumns oqcn@(QColumnName cInfo (Just oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schema schemaType)) table)) column) = do
-        case filter (maybe False (resolvedTableHasDatabase db && resolvedTableHasSchema oqsn && resolvedTableHasName oqtn) . fst) boundColumns of
+        case filter (maybe False (liftA3 and3 (resolvedTableHasDatabase db) (resolvedTableHasSchema oqsn) (resolvedTableHasName oqtn)) . fst) boundColumns of
             [] -> tell [Left $ UnintroducedTable oqtn]
             _:_:_ -> tell [Left $ AmbiguousTable oqtn]
             [(_, columns)] ->
@@ -529,7 +529,7 @@ makeDefaultingCatalog catalog path currentDb = Catalog{..}
         pure columnRef
 
     catalogResolveColumnName boundColumns oqcn@(QColumnName cInfo (Just oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo Nothing schema schemaType)) table)) column) = do
-        let filtered = filter (maybe False (resolvedTableHasSchema oqsn && resolvedTableHasName oqtn) . fst) boundColumns
+        let filtered = filter (maybe False (liftA2 (&&) (resolvedTableHasSchema oqsn) (resolvedTableHasName oqtn)) . fst) boundColumns
             fqtnDefault = QTableName tInfo (Identity $ inCurrentDb oqsn) table
         fqtn <- case filtered of
             [] -> tell [Left $ UnintroducedTable oqtn] >> pure fqtnDefault

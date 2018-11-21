@@ -20,8 +20,6 @@
 
 module Database.Sql.Presto.Scanner where
 
-import Prelude hiding ((&&), (||), not)
-
 import Control.Monad.State
 
 import           Data.Text.Lazy (Text)
@@ -38,19 +36,19 @@ import Data.Int (Int64)
 import Database.Sql.Position
 import Database.Sql.Presto.Token
 
-import Data.Predicate.Class
+import Control.Applicative (liftA2)
 
 import Numeric (readHex)
 
 
 isWordHead :: Char -> Bool
-isWordHead = isAlpha || (== '_')
+isWordHead = liftA2 (||) isAlpha (== '_')
 
 isWordBody :: Char -> Bool
-isWordBody = isAlphaNum || (== '_')
+isWordBody = liftA2 (||) isAlphaNum (== '_')
 
 isHSpace :: Char -> Bool
-isHSpace = isSpace && not (== '\n')
+isHSpace = liftA2 (&&) isSpace (/= '\n')
 
 operators :: [Text]
 operators = sortBy (flip compare)
@@ -244,7 +242,7 @@ tokNumber = runState $ do
                 _ -> pure ""
             epart <- state $ TL.span isDigit
             gets (TL.take 1) >>= \case
-                c | (not . TL.null && isWordBody . TL.head) c || TL.null epart -> do
+                c | (liftA2 (&&) (not . TL.null) (isWordBody . TL.head)) c || TL.null epart -> do
                     rest <- state $ TL.span isWordBody
                     let word = TL.concat [ipart, "e", sign, epart, rest]
                     pure (TokError "identifiers must not start with a digit", TL.length word)
@@ -252,8 +250,8 @@ tokNumber = runState $ do
                     let number = TL.concat [ipart, "e", sign, epart]
                      in pure (TokNumber number, TL.length number)
 
-        c | (isAlpha || (== '_')) (TL.head c) -> do
-            rest <- state $ TL.span (isAlpha || (== '_'))
+        c | (liftA2 (||) isAlpha (== '_')) (TL.head c) -> do
+            rest <- state $ TL.span (liftA2 (||) isAlpha (== '_'))
             let word = TL.concat [ipart, rest]
             pure (TokError "identifiers must not start with a digit", TL.length word)
 

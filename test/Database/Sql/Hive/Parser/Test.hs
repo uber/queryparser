@@ -18,6 +18,8 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
+{-# LANGUAGE CPP #-}
+
 module Database.Sql.Hive.Parser.Test where
 
 import Test.HUnit hiding (State)
@@ -30,7 +32,9 @@ import Database.Sql.Hive.Type
 import Database.Sql.Util.Test (makeSelect)
 
 import Data.List.NonEmpty (NonEmpty(..))
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Data.Int (Int64)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as TL
