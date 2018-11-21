@@ -18,13 +18,19 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
+{-# LANGUAGE CPP #-}
+
 module Database.Sql.Pretty where
 
 import Database.Sql.Type
 
 import qualified Data.Text.Lazy as TL
 
-import Text.PrettyPrint
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup
+#endif
+
+import Text.PrettyPrint (Doc, empty, isEmpty, render, text)
 
 
 renderPretty :: Pretty a => a -> String

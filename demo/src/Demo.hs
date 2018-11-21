@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -32,7 +33,11 @@ import           Data.Proxy
 import qualified Data.Set as S
 import qualified Data.Text.Lazy as TL
 
-import Text.PrettyPrint
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup
+#endif
+
+import Text.PrettyPrint (Doc, hcat, hsep, nest, text, vcat)
 
 
 -- let's provide a really simple function to do parsing!

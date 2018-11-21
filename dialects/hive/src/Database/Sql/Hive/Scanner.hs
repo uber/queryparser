@@ -20,8 +20,6 @@
 
 module Database.Sql.Hive.Scanner where
 
-import Prelude hiding ((&&), (||), not)
-
 import Data.Int (Int64)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as TL
@@ -32,19 +30,18 @@ import Data.List (sortBy)
 import Data.Foldable (asum)
 import Data.Char (isAlphaNum, isAlpha, isSpace, isDigit)
 
+import Control.Applicative (liftA2, liftA3)
 import Control.Monad.State
 
 import Database.Sql.Position
 import Database.Sql.Hive.Token
 
-import Data.Predicate.Class
-
 
 isWordBody :: Char -> Bool
-isWordBody = isAlphaNum || (== '_') || (== '$')
+isWordBody = liftA3 (\x y z -> x || y || z) isAlphaNum (== '_') (== '$')
 
 isHSpace :: Char -> Bool
-isHSpace = isSpace && not (== '\n')
+isHSpace = liftA2 (&&) isSpace (/= '\n')
 
 operators :: [Text]
 operators = sortBy (flip compare)
@@ -94,7 +91,7 @@ parseNumber = runState $ do
                 _ -> pure ""
             epart <- state $ TL.span isDigit
             gets (TL.take 1) >>= \case
-                c | (not . TL.null && isWordBody . TL.head) c || TL.null epart -> do
+                c | (liftA2 (&&) (not . TL.null) (isWordBody . TL.head)) c || TL.null epart -> do
                     rest <- state $ TL.span isWordBody
                     let word = TL.concat [ipart, "e", sign, epart, rest]
                     pure (TokWord False word, TL.length word)
@@ -102,8 +99,8 @@ parseNumber = runState $ do
                     let number = TL.concat [ipart, "e", sign, epart]
                      in pure (TokNumber number, TL.length number)
 
-        c | (isAlpha || (== '_')) (TL.head c) -> do
-            rest <- state $ TL.span (isAlpha || (== '_'))
+        c | (liftA2 (||) isAlpha (== '_')) (TL.head c) -> do
+            rest <- state $ TL.span (liftA2 (||) isAlpha (== '_'))
             let word = TL.concat [ipart, rest]
             pure (TokWord False word, TL.length word)
 
@@ -198,7 +195,7 @@ tokenize = go (Position 1 0 0)
 
 tokUnquotedWord :: Position -> Text -> (Text, Text, Position)
 tokUnquotedWord pos input =
-    case TL.span (isAlphaNum || (== '_')) input of
+    case TL.span (liftA2 (||) isAlphaNum (== '_')) input of
         (word, rest) -> (TL.toLower word, rest, advanceHorizontal (TL.length word) pos)
 
 tokQuotedWord :: Position -> Text -> Either Position (Text, Text, Position)

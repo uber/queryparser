@@ -41,8 +41,6 @@ module Database.Sql.Util.Scope
     , selectionNames, mkTableSchemaMember
     ) where
 
-import Prelude hiding ((&&), (||), not)
-import Data.Predicate.Class
 import Data.Maybe (mapMaybe)
 import Data.Either (lefts, rights)
 import Data.Traversable (traverse)
@@ -52,6 +50,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text.Lazy as TL
 import           Data.Text.Lazy (Text)
 
+import Control.Applicative (liftA2)
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Writer
@@ -505,7 +504,7 @@ resolveSelection (SelectStar info Nothing Unused) = do
 resolveSelection (SelectStar info (Just oqtn@(QTableName _ (Just schema) _)) Unused) = do
     columns <- asks (boundColumns . bindings)
     let qualifiedColumns = qualifiedOnly columns
-    case filter ((resolvedTableHasSchema schema && resolvedTableHasName oqtn) . fst) qualifiedColumns of
+    case filter ((liftA2 (&&) (resolvedTableHasSchema schema) (resolvedTableHasName oqtn)) . fst) qualifiedColumns of
         [] -> throwError $ UnintroducedTable oqtn
         [(t, cs)] -> pure $ SelectStar info (Just t) $ StarColumnNames $ map (const info <$>) cs
         _ -> throwError $ AmbiguousTable oqtn

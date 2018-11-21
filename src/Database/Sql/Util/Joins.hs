@@ -18,6 +18,7 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -31,7 +32,9 @@ import Data.Map (Map)
 import qualified Data.Set as S
 import Data.Set (Set)
 
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup
+#endif
 
 import Data.Functor.Identity
 import Data.Foldable
@@ -43,9 +46,12 @@ data Result = Result
     , resultColumns :: Set (Map (RColumnRef ()) FieldChain)
     }
 
+instance Semigroup Result where
+    (Result bindings columns) <> (Result bindings' columns') = Result (bindings <> bindings') (columns <> columns')
+
 instance Monoid Result where
     mempty = Result mempty mempty
-    mappend (Result bindings columns) (Result bindings' columns') = Result (bindings <> bindings') (columns <> columns')
+    mappend = (<>)
 
 -- Relationship observed between two columns
 type Join = ((FullyQualifiedColumnName, [StructFieldName ()]), (FullyQualifiedColumnName, [StructFieldName ()]))

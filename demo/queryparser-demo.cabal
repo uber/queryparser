@@ -19,7 +19,7 @@ library
   exposed-modules:     Demo
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.9 && <4.11
+  build-depends:       base >=4.9 && <5
                      , queryparser
                      , queryparser-vertica
                      , unordered-containers >=0.2 && <0.3
