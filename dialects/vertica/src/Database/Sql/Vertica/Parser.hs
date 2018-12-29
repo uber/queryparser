@@ -579,7 +579,7 @@ createViewP = do
         Temporary _ -> pure ()
 
     _ <- Tok.asP
-    createViewQuery <- querySelectP
+    createViewQuery <- queryP
 
     let createViewInfo = s <> getInfo createViewQuery
     pure CreateView{..}

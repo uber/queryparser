@@ -398,6 +398,18 @@ testParser = test
         , "SELECT date_trunc('week', foo.at) FROM foo;"
         , "SELECT foo::TIME FROM bar;"
         , "CREATE VIEW foo.bar AS SELECT * FROM foo.baz;"
+        , TL.unlines
+          [ "CREATE VIEW foo.bar_view AS"
+          , "    SELECT"
+          , "        a0 AS a,"
+          , "        b0 AS b"
+          , "    FROM foo.bar0"
+          , "UNION"
+          , "    SELECT"
+          , "        a1 AS a,"
+          , "        b1 AS b"
+          , "    FROM foo.bar1;"
+          ]
         , "CREATE LOCAL TEMPORARY VIEW bar AS SELECT * FROM baz;"
         , TL.unlines
           [ "CREATE OR REPLACE VIEW foo.bar (a, b) "
