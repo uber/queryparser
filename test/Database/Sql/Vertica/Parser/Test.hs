@@ -238,6 +238,7 @@ testParser = test
         , "EXPLAIN DELETE FROM foo;"
         , "EXPLAIN INSERT INTO foo SELECT 1;"
         , "SELECT 1^2;"
+        , "SELECT 1 << 2 >> 2 | ~3 & 3"
         -- Named windows can substitute for window exprs in OVER clauses
         , "SELECT RANK() OVER x FROM potato WINDOW x AS (PARTITION BY a ORDER BY b ASC);"
         -- They can also be inherited, as long as orderby is not double-defined
