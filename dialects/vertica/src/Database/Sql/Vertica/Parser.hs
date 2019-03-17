@@ -1472,7 +1472,7 @@ unOpP op = do
 
 negateExprP :: Parser (Expr RawNames Range)
 negateExprP = do
-    neg <- option id $ choice $ map unOpP [ "+", "-", "@" ]
+    neg <- option id $ choice $ map unOpP [ "+", "-", "@", "~" ]
     expr <- atTimeZoneExprP
     return $ neg expr
 
@@ -1501,12 +1501,24 @@ sumExprP = productExprP `chainl1` opP
     opP = choice $ map binOpP [ "+", "-" ]
 
 
+bitwiseExprP :: Parser (Expr RawNames Range)
+bitwiseExprP = sumExprP `chainl1` opP
+  where
+    opP = choice $ map binOpP [ "&", "|", "#" ]
+
+
+bitShiftExprP :: Parser (Expr RawNames Range)
+bitShiftExprP = bitwiseExprP `chainl1` opP
+  where
+    opP = choice $ map binOpP [ "<<", ">>" ]
+
+
 notP :: Parser (Expr RawNames Range -> Expr RawNames Range)
 notP = (\ r -> UnOpExpr r "NOT") <$> Tok.notP
 
 isExprP :: Parser (Expr RawNames Range)
 isExprP = do
-    expr <- sumExprP
+    expr <- bitShiftExprP
     is <- fmap (foldl (.) id) $ many $ choice
         [ do
             _ <- Tok.isP
@@ -1565,9 +1577,9 @@ betweenExprP = do
   where
     betweenP = do
         _ <- Tok.betweenP
-        start <- sumExprP
+        start <- bitShiftExprP
         _ <- Tok.andP
-        end <- sumExprP
+        end <- bitShiftExprP
 
         let r expr = getInfo expr <> getInfo end
         return $ \ expr -> BetweenExpr (r expr) start end expr
