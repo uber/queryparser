@@ -115,7 +115,7 @@ getColumns q = foldMap columnAccesses $ M.toList clauseMap
         else case ref of
             RColumnRef fqcn -> recur refs (ref:visited) (S.insert (fqcnToFQCN fqcn) fqcns)
             RColumnAlias (ColumnAlias _ _ cid) -> case M.lookup cid aliasMap of
-                Nothing -> error $ "column alias missing from aliasMap: " ++ show cid
+                Nothing -> error $ "column alias missing from aliasMap: " ++ show ref ++ ", " ++ show aliasMap
                 Just moarRefs -> recur (refs ++ S.toList moarRefs) (ref:visited) fqcns
 
 
