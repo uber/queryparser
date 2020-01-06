@@ -55,7 +55,7 @@ wordInfo word = maybe (WordInfo True True True True) id $ M.lookup word $ M.from
     , ("current_database",     WordInfo False False False True)
     , ("current_date",         WordInfo False False False True)
     , ("current_schema",       WordInfo False False False True)
-    , ("current_timestamp",    WordInfo False False False False)
+    , ("current_timestamp",    WordInfo False False False True)
     , ("current_time",         WordInfo False False False False)
     , ("current_user",         WordInfo False False False True)
     , ("desc",                 WordInfo False False False False)

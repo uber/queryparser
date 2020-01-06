@@ -398,6 +398,7 @@ testParser = test
         , "SELECT cast('1 minutes' AS INTERVAL MINUTE);"
         , "SELECT date_trunc('week', foo.at) FROM foo;"
         , "SELECT foo::TIME FROM bar;"
+        , "SELECT CURRENT_TIMESTAMP(1) AS time;"
         , "CREATE VIEW foo.bar AS SELECT * FROM foo.baz;"
         , TL.unlines
           [ "CREATE VIEW foo.bar_view AS"
