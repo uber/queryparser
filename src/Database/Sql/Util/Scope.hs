@@ -161,7 +161,7 @@ resolveQueryWithColumns (QueryWith info (cte:ctes) query) = do
             Exists -> asks onCTECollision
             DoesNotExist -> pure id
 
-    WithColumns (QueryWith _ ctes' query') columns <- updateBindings $ resolveQueryWithColumns $ QueryWith info ctes query
+    ~(WithColumns (QueryWith _ ctes' query') columns) <- updateBindings $ resolveQueryWithColumns $ QueryWith info ctes query
     pure $ WithColumns (QueryWith info (cte':ctes') query') columns
 
 resolveQueryWithColumns (QueryOrder info orders query) = do
@@ -184,15 +184,15 @@ resolveOrders query orders = case query of
         WithColumnsAndOrders _ _ os <- resolveSelectAndOrders s orders
         pure $ ResolvedOrders os
     q@(QueryExcept _ _ _ _) -> do
-        q'@(QueryExcept _ (ColumnAliasList cs) _ _) <- resolveQuery q
+        ~(q'@(QueryExcept _ (ColumnAliasList cs) _ _)) <- resolveQuery q
         let exprs = map (\ c@(ColumnAlias info _ _) -> ColumnExpr info $ RColumnAlias c) cs
         bindAliasedColumns (queryColumnNames q') $ ResolvedOrders <$> mapM (resolveOrder exprs) orders
     q@(QueryUnion _ _ _ _ _) -> do
-        q'@(QueryUnion _ _ (ColumnAliasList cs) _ _) <- resolveQuery q
+        ~(q'@(QueryUnion _ _ (ColumnAliasList cs) _ _)) <- resolveQuery q
         let exprs = map (\ c@(ColumnAlias info _ _) -> ColumnExpr info $ RColumnAlias c) cs
         bindAliasedColumns (queryColumnNames q') $ ResolvedOrders <$> mapM (resolveOrder exprs) orders
     q@(QueryIntersect _ _ _ _) -> do
-        q'@(QueryIntersect _ (ColumnAliasList cs) _ _) <- resolveQuery q
+        ~(q'@(QueryIntersect _ (ColumnAliasList cs) _ _)) <- resolveQuery q
         let exprs = map (\ c@(ColumnAlias info _ _) -> ColumnExpr info $ RColumnAlias c) cs
         bindAliasedColumns (queryColumnNames q') $ ResolvedOrders <$> mapM (resolveOrder exprs) orders
     QueryWith _ _ _ -> error "unexpected AST: QueryOrder enclosing QueryWith"
@@ -337,7 +337,7 @@ resolveUpdate Update{..} = do
 resolveDelete :: forall a . Delete RawNames a -> Resolver (Delete ResolvedNames) a
 resolveDelete (Delete info tableName expr) = do
     tableName'@(RTableName fqtn table@SchemaMember{..}) <- resolveTableName tableName
-    when (tableType /= Table) $ fail $ "delete only works on tables; can't delete on a " ++ show tableType
+    when (tableType /= Table) $ throwError $ DeleteFromView fqtn
     let QTableName tableInfo _ _ = tableName
     bindColumns [(Just $ RTableRef fqtn table, map (\ (QColumnName () None column) -> RColumnRef $ QColumnName tableInfo (pure fqtn) column) columnsList)] $ do
         expr' <- traverse resolveExpr expr
@@ -760,7 +760,7 @@ resolveTablish (TablishLateralView info LateralView{..} lhs) = do
 
         sequence functionSpecificLookups
 
-    defaultAliases _ = fail "lateral view must have a FunctionExpr"
+    defaultAliases _ = throwError MissingFunctionExprForLateralView
 
 
 resolveJoinCondition :: JoinCondition RawNames a -> ColumnSet a -> ColumnSet a -> Resolver (JoinCondition ResolvedNames) a

@@ -138,7 +138,7 @@ instance Evaluation Concrete where
         case x of
             RecordSet _ [] -> eval p cond x y
             RecordSet lcols lrows -> do
-                set:sets <- forM lrows $ \ lrow -> do
+                ~(set:sets) <- forM lrows $ \ lrow -> do
                     let x' = makeRecordSet p lcols [lrow]
                     eval p cond x' y >>= \case
                         RecordSet cols [] -> pure $ makeRecordSet p cols [extendWithNulls cols lrow]
@@ -149,7 +149,7 @@ instance Evaluation Concrete where
         case y of
             RecordSet _ [] -> eval p cond x y
             RecordSet rcols rrows -> do
-                set:sets <- forM rrows $ \ rrow -> do
+                ~(set:sets) <- forM rrows $ \ rrow -> do
                     let y' = makeRecordSet p rcols [rrow]
                     eval p cond x y' >>= \case
                         RecordSet cols [] -> pure $ makeRecordSet p cols [reverse $ extendWithNulls cols $ reverse rrow]
@@ -162,7 +162,7 @@ instance Evaluation Concrete where
             case y of
                 RecordSet _ [] -> eval p cond x y
                 RecordSet rcols rrows -> do
-                    set:sets <- forM rrows $ \ rrow -> do
+                    ~(set:sets) <- forM rrows $ \ rrow -> do
                         let y' = makeRecordSet p rcols [rrow]
                         eval p cond x y' >>= \case
                             RecordSet cols [] -> pure $ makeRecordSet p cols [reverse $ extendWithNulls cols $ reverse rrow]

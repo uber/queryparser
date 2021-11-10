@@ -221,6 +221,8 @@ data ResolutionError a
     | UnexpectedTable (FQTableName a)
     | UnexpectedSchema (FQSchemaName a)
     | BadPositionalReference a Int
+    | DeleteFromView (FQTableName a)
+    | MissingFunctionExprForLateralView
         deriving (Eq, Show, Functor)
 
 data ResolutionSuccess a

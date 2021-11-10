@@ -180,7 +180,7 @@ makeCatalog catalog path currentDb = Catalog{..}
         pure rcsn
 
     catalogResolveCreateTableName name = do
-        oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schemaName schemaType)) tableName) <-
+        ~oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schemaName schemaType)) tableName) <-
                 case name of
                     oqtn@(QTableName _ Nothing _) -> pure $ inHeadOfPath oqtn
                     QTableName tInfo (Just oqsn@(QSchemaName _ Nothing _ _)) tableName -> pure $ QTableName tInfo (pure $ inCurrentDb oqsn) tableName
@@ -492,7 +492,7 @@ makeDefaultingCatalog catalog path currentDb = Catalog{..}
         pure rcsn
 
     catalogResolveCreateTableName name = do
-        oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schemaName schemaType)) tableName) <-
+        ~oqtn@(QTableName tInfo (Just oqsn@(QSchemaName sInfo (Just db) schemaName schemaType)) tableName) <-
                 case name of
                     oqtn@(QTableName _ Nothing _) -> pure $ inHeadOfPath oqtn
                     (QTableName tInfo (Just oqsn@(QSchemaName _ Nothing _ _)) tableName) -> pure $ QTableName tInfo (pure $ inCurrentDb oqsn) tableName
