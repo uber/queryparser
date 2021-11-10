@@ -85,7 +85,7 @@ testAll = Test.testResolvedAll (Proxy :: Proxy (Evaluate Concrete))
 
 assertQuickCheck :: Test.QuickCheck.Testable prop => String -> prop -> Assertion
 assertQuickCheck lbl prop = quickCheckWithResult args prop >>= \case
-    Success{..} -> pure ()
+    Success{} -> pure ()
     result -> assertFailure ("quickcheck property did not hold: " ++ lbl ++ "\n" ++ output result)
   where
     args = stdArgs {chatty = False}

@@ -1073,8 +1073,8 @@ instance ConstrainSNames FromJSON r a => FromJSON (InsertValues r a) where
             values <- o .: "values"
             let fromList xs = if null xs
                               then fail "empty list of values for row in insert statement"
-                              else NE.fromList xs
-                rows = map fromList values
+                              else pure $ NE.fromList xs
+            rows <- sequence $ map fromList values
             maybe (fail "empty list of rows for insert statement")
                 (pure . InsertExprValues info) $ nonEmpty rows
 
