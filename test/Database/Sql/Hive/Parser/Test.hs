@@ -1406,6 +1406,9 @@ testParser = test
         , "SELECT 'i\\'m matt';"
         , ";"
         , "SELECT 1 as order;"
+          -- test non reserved keyword `zone`
+        , "SELECT zone, zone(1) from zone;"
+        , "CREATE DATABASE zone;"
         , "SELECT foo FROM bar;"
         , "SELECT id AS foo FROM bar;"
         , "SELECT id foo FROM bar;"
