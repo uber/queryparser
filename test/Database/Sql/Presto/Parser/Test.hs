@@ -327,6 +327,12 @@ testParser = test
         -- test DROP VIEW
         , "DROP VIEW foo;"
         , "DROP VIEW IF EXISTS foo;"
+
+        -- test parenthesized relation
+        , "SELECT * FROM (foo CROSS JOIN bar);"
+        , "SELECT a,b FROM (foo CROSS JOIN bar);"
+        , "SELECT a,b FROM (foo CROSS JOIN bar) a;"
+        , "SELECT a,b FROM (foo CROSS JOIN bar) a (a,b);"
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)

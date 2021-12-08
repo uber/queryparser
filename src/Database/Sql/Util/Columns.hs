@@ -38,7 +38,7 @@ import           Control.Monad.Reader
 import           Control.Monad.Writer
 
 import           Database.Sql.Type
-import           Database.Sql.Util.Scope (queryColumnNames)
+import           Database.Sql.Util.Scope (queryColumnNames, tablishColumnNames)
 
 type Clause = Text  -- SELECT, WHERE, GROUPBY, etc... for nested clauses,
                     -- report the innermost clause.
@@ -357,6 +357,16 @@ instance HasColumns (Tablish ResolvedNames a) where
             TablishAliasesT _ -> return ()
             TablishAliasesTC _ cAliases ->
                 tell $ zipWith aliasObservation cAliases (queryColumnDeps query)
+
+    goColumns (TablishParenthesizedRelation _ tablishAliases relation) = do
+        goColumns relation
+
+        case tablishAliases of
+            TablishAliasesNone -> return ()
+            TablishAliasesT _ -> return ()
+            TablishAliasesTC _ cAliases ->
+                let cRefSets = map S.singleton $ tablishColumnNames relation
+                 in tell $ zipWith aliasObservation cAliases cRefSets
 
     goColumns (TablishJoin _ _ cond lhs rhs) = do
         bindClause "JOIN" $ goColumns cond

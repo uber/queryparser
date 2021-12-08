@@ -354,6 +354,7 @@ getJoinsTablish (TablishLateralView _ LateralView{..} lhs) = do
     mapM_ getJoinsExpr lateralViewExprs
 
 getJoinsTablish (TablishSubQuery _ _ query) = getJoinsQuery query
+getJoinsTablish (TablishParenthesizedRelation _ _ relation) = getJoinsTablish relation
 getJoinsTablish (TablishJoin _ _ (JoinNatural _ (RNaturalColumns columns)) lhs rhs) = do
     getJoinsTablish lhs
     getJoinsTablish rhs

@@ -156,6 +156,7 @@ data Tablish r a
     | TablishJoin a (JoinType a) (JoinCondition r a)
             (Tablish r a) (Tablish r a)
     | TablishLateralView a (LateralView r a) (Maybe (Tablish r a))
+    | TablishParenthesizedRelation a (TablishAliases a) (Tablish r a)
 
 deriving instance (ConstrainSNames Data r a, Data r) => Data (Tablish r a)
 deriving instance Generic (Tablish r a)
@@ -1225,6 +1226,13 @@ instance ConstrainSNames ToJSON r a => ToJSON (Tablish r a) where
         , "info" .= info
         , "alias" .= alias
         , "query" .= query
+        ]
+
+    toJSON (TablishParenthesizedRelation info alias relation) = object
+        [ "tag" .= String "TablishParenthesizedRelation"
+        , "info" .= info
+        , "alias" .= alias
+        , "realtion" .= relation
         ]
 
     toJSON (TablishJoin info join condition outer inner) = object
