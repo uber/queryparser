@@ -1409,6 +1409,9 @@ testParser = test
           -- test non reserved keyword `zone`
         , "SELECT zone, zone(1) from zone;"
         , "CREATE DATABASE zone;"
+          -- test non reserved keyword `zone`
+        , "SELECT desc, desc(1) from desc;"
+        , "CREATE DATABASE desc;"
         , "SELECT foo FROM bar;"
         , "SELECT id AS foo FROM bar;"
         , "SELECT id foo FROM bar;"
