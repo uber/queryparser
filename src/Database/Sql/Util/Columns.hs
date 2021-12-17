@@ -38,7 +38,7 @@ import           Control.Monad.Reader
 import           Control.Monad.Writer
 
 import           Database.Sql.Type
-
+import           Database.Sql.Util.Scope (queryColumnNames)
 
 type Clause = Text  -- SELECT, WHERE, GROUPBY, etc... for nested clauses,
                     -- report the innermost clause.
@@ -203,46 +203,7 @@ instance HasColumns (CTE ResolvedNames a) where
 
 -- for every column returned by the query, what columns did it depend on?
 queryColumnDeps :: Query ResolvedNames a -> [Set (RColumnRef ())]
-queryColumnDeps query =
-    -- Get the entire query's aliasMap ahead of time: if a QueryWith defines
-    -- aliases via the CTEs, those aliases can be selected in the main query!
-    let aliasMap = toAliasMap $ execWriter $ runReaderT (goColumns query) baseClause
-     in queryColumnDepsHelper aliasMap query
-  where
-    queryColumnDepsHelper :: AliasMap -> Query ResolvedNames a -> [Set (RColumnRef ())]
-    queryColumnDepsHelper aliasMap (QuerySelect _ s) =
-        let selectionDeps :: Selection ResolvedNames a -> [Set (RColumnRef ())]
-            selectionDeps (SelectStar _ _ (StarColumnNames refs)) = map colDeps refs
-            selectionDeps (SelectExpr _ aliases _) = map aliasDeps aliases
-
-            colDeps :: RColumnRef a -> Set (RColumnRef ())
-            colDeps ref@(RColumnRef _) = S.singleton $ void ref
-            colDeps (RColumnAlias alias) = aliasDeps alias
-
-            aliasDeps :: ColumnAlias a -> Set (RColumnRef ())
-            aliasDeps (ColumnAlias _ _ cid) =
-                case M.lookup cid aliasMap of
-                    Just deps -> deps
-                    Nothing -> error $ "column alias missing from aliasesMap: " ++ show cid
-
-            selections = selectColumnsList $ selectCols s
-
-         in concatMap selectionDeps selections
-
-    queryColumnDepsHelper aliasMap (QueryExcept _ _ lhs rhs) =
-        zipWith S.union (queryColumnDepsHelper aliasMap lhs) (queryColumnDepsHelper aliasMap rhs)
-
-    queryColumnDepsHelper aliasMap (QueryUnion _ _ _ lhs rhs) =
-        zipWith S.union (queryColumnDepsHelper aliasMap lhs) (queryColumnDepsHelper aliasMap rhs)
-
-    queryColumnDepsHelper aliasMap (QueryIntersect _ _ lhs rhs) =
-        zipWith S.union (queryColumnDepsHelper aliasMap lhs) (queryColumnDepsHelper aliasMap rhs)
-
-    queryColumnDepsHelper aliasMap (QueryWith _ _ q) = queryColumnDepsHelper aliasMap q
-    queryColumnDepsHelper aliasMap (QueryOrder _ _ q) = queryColumnDepsHelper aliasMap q
-    queryColumnDepsHelper aliasMap (QueryLimit _ _ q) = queryColumnDepsHelper aliasMap q
-    queryColumnDepsHelper aliasMap (QueryOffset _ _ q) = queryColumnDepsHelper aliasMap q
-
+queryColumnDeps = map (S.singleton . void) . queryColumnNames
 
 instance HasColumns (Insert ResolvedNames a) where
     goColumns Insert{..} = bindClause "INSERT" $ goColumns insertValues
