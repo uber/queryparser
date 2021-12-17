@@ -20,7 +20,6 @@
 
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -43,7 +42,6 @@ module Database.Sql.Util.Scope
 
 import Data.Maybe (mapMaybe)
 import Data.Either (lefts, rights)
-import Data.Traversable (traverse)
 import Database.Sql.Type
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -648,11 +646,11 @@ resolveSchemaName schemaName = do
 
 resolveTableRef :: OQTableName a -> Resolver (WithColumns RTableRef) a
 resolveTableRef tableName = do
-    ResolverInfo{catalog = Catalog{..}, bindings = Bindings{..}, ..} <- ask
+    ResolverInfo{catalog = Catalog{..}, bindings = Bindings{..}} <- ask
     lift $ lift $ catalogResolveTableRef boundCTEs tableName
 
 
-resolveColumnName :: forall a . OQColumnName a -> Resolver (RColumnRef) a
+resolveColumnName :: forall a . OQColumnName a -> Resolver RColumnRef a
 resolveColumnName columnName = do
     (Catalog{..}, Bindings{..}) <- asks (catalog &&& bindings)
     lift $ lift $ catalogResolveColumnName boundColumns columnName

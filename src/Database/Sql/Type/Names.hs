@@ -38,7 +38,6 @@ module Database.Sql.Type.Names where
 import Data.Hashable
 import Data.Text.Lazy (Text, pack)
 import Data.Aeson
-import Data.Semigroup
 import Data.String
 import Data.Functor.Identity
 import Data.Data (Data, Typeable)

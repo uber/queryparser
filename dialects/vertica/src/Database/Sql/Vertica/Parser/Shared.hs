@@ -43,7 +43,6 @@ import           Text.Parsec ( choice
                              , sepBy1, try )
 
 import Control.Arrow (first)
-import Data.Semigroup ((<>))
 
 
 dataTypeP :: Parser (DataType Range)

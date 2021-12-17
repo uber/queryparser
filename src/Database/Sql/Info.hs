@@ -23,7 +23,6 @@
 module Database.Sql.Info where
 
 import Database.Sql.Type
-import Data.Semigroup
 
 class HasInfo a where
     type Info a

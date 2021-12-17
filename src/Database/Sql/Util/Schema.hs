@@ -25,7 +25,7 @@ import qualified Data.HashMap.Strict as HMS
 import qualified Data.List as L
 import Data.List.NonEmpty (NonEmpty (..))
 
-import Data.Maybe (mapMaybe, maybeToList)
+import Data.Maybe (mapMaybe)
 
 import Database.Sql.Type.Names
 import Database.Sql.Type.TableProps
@@ -315,47 +315,3 @@ toUQCN :: AST.RColumnRef a -> UQColumnName ()
 toUQCN (AST.RColumnRef (QColumnName _ _ column)) = QColumnName () None column
 toUQCN (AST.RColumnAlias (ColumnAlias _ column _)) = QColumnName () None column
 
-instance HasSchemaChange (AST.ResolutionError a) where
-    getSchemaChange (AST.MissingDatabase db) = [CreateDatabase (void db) HMS.empty]
-
-    getSchemaChange (AST.MissingSchema oqsn) = maybeToList $ do
-        case schemaNameType oqsn of
-            NormalSchema -> pure ()
-            SessionSchema -> error "missing session schema?"
-        db <- AST.schemaNameDatabase oqsn
-        pure $ CreateSchema (void oqsn { schemaNameDatabase = pure db } ) HMS.empty
-
-    getSchemaChange (AST.MissingTable oqtn) = maybeToList $ do
-        oqsn <- AST.tableNameSchema oqtn
-        db <- AST.schemaNameDatabase oqsn
-        pure $ CreateTable (void oqtn { tableNameSchema = pure oqsn { schemaNameDatabase = pure db } } ) (persistentTable [])
-
-    getSchemaChange (AST.AmbiguousTable _) = []
-
-    getSchemaChange (AST.MissingColumn oqcn) = maybeToList $ do
-            oqtn <- AST.columnNameTable oqcn
-            oqsn <- AST.tableNameSchema oqtn
-            db <- AST.schemaNameDatabase oqsn
-            pure $ AddColumn $ void oqcn { columnNameTable = pure oqtn { tableNameSchema = pure oqsn { schemaNameDatabase = pure db } } }
-
-    getSchemaChange (AST.AmbiguousColumn _) = []
-    getSchemaChange (AST.UnintroducedTable _) = []
-    getSchemaChange (AST.UnexpectedTable table) = [DropTable (void table)]
-    getSchemaChange (AST.UnexpectedSchema table) = [DropSchema (void table)]
-    getSchemaChange (AST.BadPositionalReference _ _) = []
-
-instance HasSchemaChange (ResolutionSuccess a) where
-    getSchemaChange (ColumnRefDefaulted _ (RColumnRef name)) = [AddColumn $ void name]
-    getSchemaChange (TableNameDefaulted _ (RTableName name table)) = [CreateTable (void name) table]
-    getSchemaChange (TableRefDefaulted _ (RTableRef name table)) = [CreateTable (void name) table]
-
-    -- I don't think we can infer anything about the schema from aliases
-    getSchemaChange (ColumnRefDefaulted _ (RColumnAlias _)) = []
-    getSchemaChange (TableRefDefaulted _ (RTableAlias _)) = []
-
-    -- resolving means we have it right, no changes
-    getSchemaChange (TableNameResolved _ _) = []
-    getSchemaChange (CreateTableNameResolved _ _) = []
-    getSchemaChange (CreateSchemaNameResolved _ _) = []
-    getSchemaChange (TableRefResolved _ _) = []
-    getSchemaChange (ColumnRefResolved _ _) = []

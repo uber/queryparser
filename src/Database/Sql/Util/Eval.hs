@@ -136,12 +136,12 @@ instance Evaluation e => Evaluate e (Query ResolvedNames Range) where
     eval p (QuerySelect _ select) = eval p select
     eval p (QueryExcept _ (ColumnAliasList cs) lhs rhs) = do
         exclude <- recordSetItems <$> eval p rhs
-        RecordSet{recordSetItems = unfiltered, ..} <- eval p lhs
+        RecordSet{recordSetItems = unfiltered} <- eval p lhs
         let labels = map (RColumnAlias . void) cs
         makeRecordSet p labels <$> removeItems p exclude unfiltered
 
     eval p (QueryUnion _ (Distinct False) (ColumnAliasList cs) lhs rhs) = do
-        RecordSet{recordSetItems = lhsRows, ..} <- eval p lhs
+        RecordSet{recordSetItems = lhsRows} <- eval p lhs
         RecordSet{recordSetItems = rhsRows} <- eval p rhs
         let labels = map (RColumnAlias . void) cs
         makeRecordSet p labels <$> unionItems p lhsRows rhsRows
@@ -151,7 +151,7 @@ instance Evaluation e => Evaluate e (Query ResolvedNames Range) where
         pure $ result{recordSetItems = distinctItems p recordSetItems}
 
     eval p (QueryIntersect _ (ColumnAliasList cs) lhs rhs) = do
-        RecordSet{recordSetItems = litems, ..} <- eval p lhs
+        RecordSet{recordSetItems = litems} <- eval p lhs
         ritems <- recordSetItems <$> eval p rhs
         let labels = map (RColumnAlias . void) cs
         makeRecordSet p labels <$> intersectItems p litems ritems
