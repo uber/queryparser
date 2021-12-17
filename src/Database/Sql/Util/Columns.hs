@@ -28,6 +28,7 @@ import           Data.Either
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Data.List.NonEmpty (NonEmpty(..))
+import           Data.List (transpose)
 import           Data.Set (Set)
 import qualified Data.Set as S
 import           Data.Text.Lazy (Text)
@@ -115,7 +116,7 @@ getColumns q = foldMap columnAccesses $ M.toList clauseMap
         else case ref of
             RColumnRef fqcn -> recur refs (ref:visited) (S.insert (fqcnToFQCN fqcn) fqcns)
             RColumnAlias (ColumnAlias _ _ cid) -> case M.lookup cid aliasMap of
-                Nothing -> error $ "column alias missing from aliasMap: " ++ show cid
+                Nothing -> error $ "column alias missing from aliasMap: " ++ show ref ++ ", " ++ show aliasMap
                 Just moarRefs -> recur (refs ++ S.toList moarRefs) (ref:visited) fqcns
 
 
@@ -149,9 +150,9 @@ instance HasColumns (Statement d ResolvedNames a) where
 
 instance HasColumns (Query ResolvedNames a) where
     goColumns (QuerySelect _ select) = goColumns select
-    goColumns (QueryExcept _ _ lhs rhs) = mapM_ goColumns [lhs, rhs]
-    goColumns (QueryUnion _ _ _ lhs rhs) = mapM_ goColumns [lhs, rhs]
-    goColumns (QueryIntersect _ _ lhs rhs) = mapM_ goColumns [lhs, rhs]
+    goColumns (QueryExcept _ cc lhs rhs) = goColumnsComposed cc [lhs, rhs]
+    goColumns (QueryUnion _ _ cc lhs rhs) = goColumnsComposed cc [lhs, rhs]
+    goColumns (QueryIntersect _ cc lhs rhs) = goColumnsComposed cc [lhs, rhs]
     goColumns (QueryWith _ ctes query) = goColumns query >> mapM_ goColumns ctes
     goColumns (QueryOrder _ orders query) = sequence_
         [ bindClause "ORDER" $ mapM_ (handleOrderTopLevel query) orders
@@ -159,6 +160,12 @@ instance HasColumns (Query ResolvedNames a) where
         ]
     goColumns (QueryLimit _ _ query) = goColumns query
     goColumns (QueryOffset _ _ query) = goColumns query
+
+goColumnsComposed :: ColumnAliasList a -> [Query ResolvedNames a] -> Observer
+goColumnsComposed (ColumnAliasList as) qs = do
+    mapM_ goColumns qs
+    let deps = map S.unions $ transpose $ map queryColumnDeps qs
+    tell $ zipWith aliasObservation as deps
 
 handleOrderTopLevel :: Query ResolvedNames a -> Order ResolvedNames a -> Observer
 handleOrderTopLevel query (Order _ posOrExpr _ _) = case posOrExpr of
