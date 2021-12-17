@@ -50,9 +50,7 @@ import Data.Either (partitionEithers)
 import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty((:|)), toList, fromList)
 import Data.Maybe (catMaybes)
-import Data.Semigroup
 import Data.Text.Lazy (Text)
-import Data.Traversable (traverse)
 
 import           Data.Aeson (ToJSON (..), (.=))
 import qualified Data.Aeson as JSON

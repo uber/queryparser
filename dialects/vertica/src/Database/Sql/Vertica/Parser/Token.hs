@@ -37,8 +37,6 @@ import           Data.ByteString.Lazy (ByteString)
 
 import Data.String
 
-import Data.Semigroup ((<>))
-
 
 showTok :: (Token, Position, Position) -> String
 showTok (t, _, _) = show t

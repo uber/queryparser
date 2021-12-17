@@ -25,7 +25,7 @@ import Database.Sql.Position
 import           Text.Parsec (ParsecT, Stream, option, optionMaybe)
 import qualified Text.Parsec as P
 
-import Data.Semigroup (Semigroup, sconcat, (<>))
+import Data.Semigroup (sconcat)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 
 

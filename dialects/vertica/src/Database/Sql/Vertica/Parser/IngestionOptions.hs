@@ -33,8 +33,6 @@ import           Text.Parsec ( choice
                              , option, optional
                              , sepBy, sepBy1, (<|>))
 
-import Data.Semigroup (Semigroup (..))
-
 
 ingestionColumnListP :: Parser Range -> Parser Range
 ingestionColumnListP exprP = do

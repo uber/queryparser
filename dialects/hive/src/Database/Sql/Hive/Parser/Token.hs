@@ -35,7 +35,6 @@ import           Data.Text.Lazy hiding (foldl1, map, head, last, all, null, init
 import qualified Data.Text.Lazy.Encoding as TL
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BL
-import           Data.Semigroup ((<>))
 
 
 showTok :: (Token, Position, Position) -> String

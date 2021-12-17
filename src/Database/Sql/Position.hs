@@ -29,8 +29,6 @@ import qualified Data.Text.Lazy as TL
 
 import           Data.Aeson
 
-import Data.Semigroup (Semigroup (..))
-
 import Data.Data (Data)
 import GHC.Generics (Generic)
 

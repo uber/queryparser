@@ -34,7 +34,6 @@ import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as TL
 
 import qualified Data.Map as M
-import Data.Semigroup ((<>))
 
 
 -- helpers
