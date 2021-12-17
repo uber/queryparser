@@ -211,6 +211,32 @@ testColumnAccesses = test
               , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "LATERALVIEW")
               ]
           )
+        -- aliases in multi-select queries
+        , testAll
+          "select aAlias from (select a as aAlias from bar union select b as aAlias from bar) t"
+          defaultTestCatalog
+          ((@=?) $ S.fromList
+           [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+           , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+           ]
+          )
+        , testVertica
+          "select aAlias from (select a as aAlias from bar intersect select b as aAlias from bar) t"
+          defaultTestCatalog
+          ((@=?) $ S.fromList
+           [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+           , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+           ]
+          )
+          -- Hive doesn't support intersect!
+        , testPresto
+          "select aAlias from (select a as aAlias from bar intersect select b as aAlias from bar) t"
+          defaultTestCatalog
+          ((@=?) $ S.fromList
+           [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+           , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+           ]
+          )
 
         -- positional references
         , testAll "SELECT a FROM foo ORDER BY 1;" defaultTestCatalog

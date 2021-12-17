@@ -41,11 +41,27 @@ import qualified Database.Sql.Util.Tables.Test
 import qualified Database.Sql.Util.Catalog.Test
 import qualified Test.Framework.Providers.API as TestFramework
 import qualified Test.Framework.Runners.Console as Test
+import qualified Test.Framework.Runners.Options as Test
 import qualified Test.Framework.Providers.HUnit as Test
 import qualified Test.HUnit as HU
 
+testOpts :: Test.RunnerOptions
+testOpts = Test.RunnerOptions{
+    ropt_threads = Nothing
+  , ropt_test_options = Nothing
+  , ropt_test_patterns = Nothing
+  , ropt_xml_output = Nothing
+  , ropt_xml_nested = Nothing
+  , ropt_color_mode = Nothing
+  , ropt_hide_successes = Just True
+  , ropt_list_only = Nothing
+                             }
+
 main :: IO ()
-main = Test.defaultMain $ hunitTests ++ quickCheckProperties
+main = Test.defaultMainWithOpts
+       (hunitTests ++ quickCheckProperties)
+       testOpts
+
 
 hunitTests :: [TestFramework.Test]
 hunitTests = Test.hUnitTestToTests $ HU.TestList
