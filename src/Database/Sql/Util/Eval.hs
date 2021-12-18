@@ -210,7 +210,7 @@ instance Evaluation e => Evaluate e (Tablish ResolvedNames Range) where
     eval _ (TablishTable _ _ (RTableRef tableName table)) = asks evalFromTable <*> pure (RTableName tableName table) >>= \case
         Nothing -> throwError $ "missing table: " ++ show (void tableName)
         Just result -> pure result
-    eval _ (TablishTable _ _ (RTableAlias (TableAlias _ aliasName alias))) = asks (M.lookup alias . evalAliasMap) >>= \case
+    eval _ (TablishTable _ _ (RTableAlias (TableAlias _ aliasName alias) _)) = asks (M.lookup alias . evalAliasMap) >>= \case
         Nothing -> throwError $ "missing table alias: " ++ show aliasName
         Just result -> pure result
 

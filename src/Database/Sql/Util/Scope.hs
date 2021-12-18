@@ -305,15 +305,13 @@ resolveDefaultExpr (ExprValue expr) = ExprValue <$> resolveExpr expr
 
 resolveUpdate :: Update RawNames a -> Resolver (Update ResolvedNames) a
 resolveUpdate Update{..} = do
-    updateTable'@(RTableName fqtn schemaMember) <- resolveTableName updateTable
+    updateTable'@(RTableName fqtn _) <- resolveTableName updateTable
 
-    let uqcns = columnsList schemaMember
-        tgtColRefs = map (\uqcn -> RColumnRef $ uqcn { columnNameInfo = tableNameInfo fqtn
-                                                     , columnNameTable = Identity fqtn
-                                                     }) uqcns
+    let tgtTableRef = rTableNameToRTableRef updateTable'
+        tgtColRefs = getColumnList tgtTableRef
         tgtColSet = case updateAlias of
-            Just alias -> (Just $ RTableAlias alias, tgtColRefs)
-            Nothing -> (Just $ RTableRef fqtn schemaMember, tgtColRefs)
+            Just alias -> (Just $ RTableAlias alias tgtColRefs, tgtColRefs)
+            Nothing -> (Just tgtTableRef, tgtColRefs)
 
     (updateFrom', srcColSet) <- case updateFrom of
         Just tablish -> resolveTablish tablish >>= (\ (WithColumns t cs) -> return (Just t, cs))
@@ -675,8 +673,8 @@ resolveTablish (TablishTable info aliases name) = do
 
     let columns' = case aliases of
             TablishAliasesNone -> columns
-            TablishAliasesT t -> map (first $ const $ Just $ RTableAlias t) columns
-            TablishAliasesTC t cs -> [(Just $ RTableAlias t, map RColumnAlias cs)]
+            TablishAliasesT t -> map (first $ const $ Just $ RTableAlias t (getColumnList name')) columns
+            TablishAliasesTC t cs -> [(Just $ RTableAlias t (getColumnList name'), map RColumnAlias cs)]
 
     pure $ WithColumns (TablishTable info aliases name') columns'
 
@@ -686,8 +684,8 @@ resolveTablish (TablishSubQuery info aliases query) = do
     let columns = queryColumnNames query'
         (tAlias, cAliases) = case aliases of
             TablishAliasesNone -> (Nothing, columns)
-            TablishAliasesT t -> (Just $ RTableAlias t, columns)
-            TablishAliasesTC t cs -> (Just $ RTableAlias t, map RColumnAlias cs)
+            TablishAliasesT t -> (Just $ RTableAlias t columns, columns)
+            TablishAliasesTC t cs -> (Just $ RTableAlias t columns, map RColumnAlias cs)
 
     pure $ WithColumns (TablishSubQuery info aliases query') [(tAlias, cAliases)]
 
@@ -707,7 +705,7 @@ resolveTablish (TablishJoin info joinType cond lhs rhs) = do
           _ -> lcolumns ++ rcolumns
     bindColumns (lcolumns ++ rcolumns) $ do
         cond' <- resolveJoinCondition cond lcolumns rcolumns
-        pure $ WithColumns (TablishJoin info joinType cond' lhs' rhs') $ colsForRestOfQuery
+        pure $ WithColumns (TablishJoin info joinType cond' lhs' rhs') colsForRestOfQuery
 
 resolveTablish (TablishLateralView info LateralView{..} lhs) = do
     (lhs', lcolumns) <- case lhs of
@@ -726,13 +724,13 @@ resolveTablish (TablishLateralView info LateralView{..} lhs) = do
         defaultCols <- map RColumnAlias . concat <$> mapM defaultAliases lateralViewExprs'
         let rcolumns = case lateralViewAliases of
                 TablishAliasesNone -> [(Nothing, defaultCols)]
-                TablishAliasesT t -> [(Just $ RTableAlias t, defaultCols)]
-                TablishAliasesTC t cs -> [(Just $ RTableAlias t, map RColumnAlias cs)]
+                TablishAliasesT t -> [(Just $ RTableAlias t defaultCols, defaultCols)]
+                TablishAliasesTC t cs -> [(Just $ RTableAlias t defaultCols, map RColumnAlias cs)]
 
         pure $ WithColumns (TablishLateralView info view lhs') $ lcolumns ++ rcolumns
   where
     defaultAliases (FunctionExpr r (QFunctionName _ _ rawName) _ args _ _ _) = do
-        let argsLessOne = (length args) - 1
+        let argsLessOne = length args - 1
 
             alias = makeColumnAlias r
 

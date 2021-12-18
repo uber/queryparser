@@ -450,21 +450,19 @@ resolveVerticaStatement (VerticaMultipleRenameStatement stmt) = VerticaMultipleR
 resolveVerticaStatement (VerticaSetSchemaStatement stmt) = VerticaSetSchemaStatement <$> resolveSetSchema stmt
 
 resolveVerticaStatement (VerticaMergeStatement Merge{..}) = do
-    mergeTargetTable'@(RTableName tFqtn tSchemaMember) <- resolveTableName mergeTargetTable
-    mergeSourceTable'@(RTableName sFqtn sSchemaMember) <- resolveTableName mergeSourceTable
+    mergeTargetTable'@(RTableName tFqtn _) <- resolveTableName mergeTargetTable
+    mergeSourceTable' <- resolveTableName mergeSourceTable
 
-    let mkColRefs :: [UQColumnName ()] -> FQTableName a -> [RColumnRef a]
-        mkColRefs uqcns fqtn = map (\uqcn -> RColumnRef $ uqcn { columnNameInfo = tableNameInfo fqtn
-                                                               , columnNameTable = Identity fqtn
-                                                               }) uqcns
-        tgtColRefs = mkColRefs (columnsList tSchemaMember) tFqtn
+    let tgtTableRef = rTableNameToRTableRef mergeTargetTable'
+        tgtColRefs = getColumnList tgtTableRef
         tgtColSet = case mergeTargetAlias of
-            Just alias -> (Just $ RTableAlias alias, tgtColRefs)
-            Nothing -> (Just $ RTableRef tFqtn tSchemaMember, tgtColRefs)
-        srcColRefs = mkColRefs (columnsList sSchemaMember) sFqtn
+            Just alias -> (Just $ RTableAlias alias tgtColRefs, tgtColRefs)
+            Nothing -> (Just tgtTableRef, tgtColRefs)
+        srcTableRef = rTableNameToRTableRef mergeSourceTable'
+        srcColRefs = getColumnList srcTableRef
         srcColSet = case mergeSourceAlias of
-            Just alias -> (Just $ RTableAlias alias, srcColRefs)
-            Nothing -> (Just $ RTableRef sFqtn sSchemaMember, srcColRefs)
+            Just alias -> (Just $ RTableAlias alias srcColRefs, srcColRefs)
+            Nothing -> (Just srcTableRef, srcColRefs)
 
     mergeCondition' <- bindColumns [srcColSet, tgtColSet] $ resolveExpr mergeCondition
 
