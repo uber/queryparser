@@ -18,7 +18,6 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -30,7 +29,6 @@ import Database.Sql.Type.TableProps
 import Database.Sql.Type.Scope
 
 import Control.Applicative (liftA2, liftA3)
-import Control.Arrow (first)
 import Control.Monad.Except
 import Control.Monad.Writer
 import Data.Functor.Identity
@@ -143,10 +141,10 @@ makeCatalog catalog path currentDb = Catalog{..}
         catalogResolveTableRefHelper $ QTableName tInfo (Just $ inCurrentDb oqsn) tableName
 
     catalogResolveTableRef boundCTEs oqtn@(QTableName tInfo Nothing tableName) = do
-        case filter (resolvedTableHasName oqtn . fst) $ map (first RTableAlias) boundCTEs of
-            [(t, cs)] -> do
+        case filter (resolvedTableHasName oqtn) $ map (uncurry RTableAlias) boundCTEs of
+            [t] -> do
                 tell [Right $ TableRefResolved oqtn t]
-                pure $ WithColumns t [(Just t, cs)]
+                pure $ WithColumns t [(Just t, getColumnList t)]
             _:_ -> throwError $ AmbiguousTable oqtn
             [] -> do
                 let getTableFromSchema uqsn@(QSchemaName _ None schemaName schemaType) = do
@@ -262,7 +260,7 @@ makeCatalog catalog path currentDb = Catalog{..}
             [(table', columns)] -> do
                 case filter (resolvedColumnHasName oqcn) columns of
                     [] -> case table' of
-                        RTableAlias _ -> throwError $ MissingColumn oqcn
+                        RTableAlias _ _ -> throwError $ MissingColumn oqcn
                         RTableRef fqtn@(QTableName _ (Identity (QSchemaName _ (Identity (DatabaseName _ db)) schema schemaType)) _) _ -> do
                             let c = RColumnRef $ QColumnName cInfo (pure $ setInfo fqtn) column
                             tell [ Left $ MissingColumn $ QColumnName cInfo (Just $ QTableName tInfo (Just $ QSchemaName cInfo (Just $ DatabaseName cInfo db) schema schemaType) table) column
@@ -445,14 +443,14 @@ makeDefaultingCatalog catalog path currentDb = Catalog{..}
         catalogResolveTableRefHelper $ QTableName tInfo (Just $ inCurrentDb oqsn) tableName
 
     catalogResolveTableRef boundCTEs oqtn@(QTableName tInfo Nothing tableName) = do
-        case filter (resolvedTableHasName oqtn . fst) $ map (first RTableAlias) boundCTEs of
-            ts@((t, _):rest) -> do
-                if (null rest)
+        case filter (resolvedTableHasName oqtn) $ map (uncurry RTableAlias) boundCTEs of
+            (t:rest) -> do
+                if null rest
                    then tell [ Right $ TableRefResolved oqtn t ]
                    else tell [ Left $ AmbiguousTable oqtn
                              , Right $ TableRefDefaulted oqtn t
                              ]
-                let ts' = map (first Just) ts
+                let ts' = map (\(t', cs) -> (Just $ RTableAlias t' cs, cs)) boundCTEs
                 pure $ WithColumns t ts'
             [] -> do
                 let getTableFromSchema uqsn@(QSchemaName _ None schemaName schemaType) = do
@@ -562,7 +560,7 @@ makeDefaultingCatalog catalog path currentDb = Catalog{..}
             [(table', columns)] -> do
                 case filter (resolvedColumnHasName oqcn) columns of
                     [] -> case table' of
-                        RTableAlias _ -> do
+                        RTableAlias _ _-> do
                             let c = RColumnRef $ QColumnName cInfo (pure $ QTableName tInfo (pure $ unknownSchema tInfo) table) column
                             tell [ Left $ MissingColumn oqcn
                                  , Right $ ColumnRefDefaulted oqcn c

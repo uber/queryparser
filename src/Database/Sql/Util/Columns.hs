@@ -343,12 +343,9 @@ instance HasColumns (Tablish ResolvedNames a) where
         case tablishAliases of
             TablishAliasesNone -> return ()
             TablishAliasesT _ -> return ()
-            TablishAliasesTC _ cAliases -> case tableRef of
-                RTableRef fqtn SchemaMember{..} ->
-                    let fqcns = map (\uqcn -> uqcn { columnNameTable = Identity $ void fqtn }) columnsList
-                        cRefSets = map (S.singleton . RColumnRef) fqcns
-                     in tell $ zipWith aliasObservation cAliases cRefSets
-                RTableAlias _ -> return ()
+            TablishAliasesTC _ cAliases -> 
+                let cRefSets = map S.singleton $ getColumnList tableRef
+                 in tell $ zipWith aliasObservation cAliases cRefSets
 
     goColumns (TablishSubQuery _ tablishAliases query) = do
         -- recurse to emit clause infos

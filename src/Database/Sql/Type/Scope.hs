@@ -260,25 +260,34 @@ data WithColumnsAndOrders r a = WithColumnsAndOrders (r a) (ColumnSet a) [Order 
 -- R for "resolved"
 data RTableRef a
     = RTableRef (FQTableName a) SchemaMember
-    | RTableAlias (TableAlias a)
+    | RTableAlias (TableAlias a) [RColumnRef a]
       deriving (Generic, Data, Show, Eq, Ord, Functor, Foldable, Traversable)
 
+getColumnList :: RTableRef a -> [RColumnRef a]
+getColumnList (RTableRef fqtn SchemaMember{..}) = 
+    let fqcns = map (\uqcn -> uqcn { columnNameInfo = tableNameInfo fqtn, columnNameTable = Identity fqtn }) columnsList
+     in map RColumnRef fqcns
+getColumnList (RTableAlias _ cols) = cols
+
 resolvedTableHasName :: QTableName f a -> RTableRef a -> Bool
-resolvedTableHasName (QTableName _ _ name) (RTableAlias (TableAlias _ name' _)) = name' == name
+resolvedTableHasName (QTableName _ _ name) (RTableAlias (TableAlias _ name' _) _) = name' == name
 resolvedTableHasName (QTableName _ _ name) (RTableRef (QTableName _ _ name') _) = name' == name
 
 resolvedTableHasSchema :: QSchemaName f a -> RTableRef a -> Bool
-resolvedTableHasSchema _ (RTableAlias _) = False
+resolvedTableHasSchema _ (RTableAlias _ _) = False
 resolvedTableHasSchema (QSchemaName _ _ name schemaType) (RTableRef (QTableName _ (Identity (QSchemaName _ _ name' schemaType')) _) _) =
     name == name' && schemaType == schemaType'
 
 resolvedTableHasDatabase :: DatabaseName a -> RTableRef a -> Bool
-resolvedTableHasDatabase _ (RTableAlias _) = False
+resolvedTableHasDatabase _ (RTableAlias _ _) = False
 resolvedTableHasDatabase (DatabaseName _ name) (RTableRef (QTableName _ (Identity (QSchemaName _ (Identity (DatabaseName _ name')) _ _)) _) _) = name' == name
 
 
 data RTableName a = RTableName (FQTableName a) SchemaMember
     deriving (Generic, Data, Eq, Ord, Show, Functor, Foldable, Traversable)
+
+rTableNameToRTableRef :: RTableName a -> RTableRef a
+rTableNameToRTableRef (RTableName fqtn sm) = RTableRef fqtn sm
 
 data RDropTableName a
     = RDropExistingTableName (FQTableName a) SchemaMember
@@ -323,7 +332,7 @@ instance ToJSON a => ToJSON (RTableRef a) where
         [ "tag" .= String "RTableRef"
         , "fqtn" .= fqtn
         ]
-    toJSON (RTableAlias alias) = object
+    toJSON (RTableAlias alias _) = object
         [ "tag" .= String "RTableAlias"
         , "alias" .= alias
         ]

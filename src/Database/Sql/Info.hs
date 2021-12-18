@@ -145,7 +145,7 @@ instance HasInfo (TableAlias a) where
 instance Semigroup a => HasInfo (RTableRef a) where
     type Info (RTableRef a) = a
     getInfo (RTableRef name _) = getInfo name
-    getInfo (RTableAlias alias) = getInfo alias
+    getInfo (RTableAlias alias _) = getInfo alias
 
 instance Semigroup a => HasInfo (RTableName a) where
     type Info (RTableName a) = a

@@ -341,6 +341,18 @@ testColumnAccesses = test
                   , (FullyQualifiedColumnName "default_db" "public" "tabB" "col1", "WHERE")
                   ]
               )
+        , testPresto "WITH cte AS (SELECT a FROM foo) SELECT cAlias FROM cte AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")
+              ]
+          )
+        , testPresto "WITH cte (x) AS (SELECT a FROM foo) SELECT cAlias FROM cte AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")
+              ]
+          )
         ]
 
     , ticket "T681602" $ concat
@@ -360,20 +372,6 @@ testColumnAccesses = test
           )
         ]
 
-    , ticket "T681632" $ concat
-        [ testPresto "WITH cte AS (SELECT a FROM foo) SELECT cAlias FROM cte AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
-          ((@=?) $ S.fromList
-              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
-              , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")
-              ]
-          )
-        , testPresto "WITH cte (x) AS (SELECT a FROM foo) SELECT cAlias FROM cte AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
-          ((@=?) $ S.fromList
-              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
-              , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")
-              ]
-          )
-        ]
     ]
 
 
