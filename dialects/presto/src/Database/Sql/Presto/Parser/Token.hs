@@ -635,3 +635,12 @@ whereP = keywordP "where"
 
 withP :: Parser Range
 withP = keywordP "with"
+
+setP :: Parser Range
+setP = keywordP "set"
+
+roleP :: Parser Range
+roleP = keywordP "role"
+
+sessionP :: Parser Range
+sessionP = keywordP "session"

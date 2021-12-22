@@ -63,6 +63,7 @@ statementParser = do
         , PrestoUnhandledStatement <$> showP
         , PrestoUnhandledStatement <$> callP
         , PrestoUnhandledStatement <$> describeP
+        , PrestoUnhandledStatement <$> setP
         ]
     case maybeStmt of
         Just stmt -> terminator >> return stmt
@@ -1558,3 +1559,12 @@ describeP = do
     s <- Tok.describeP
     e <- P.many1 Tok.notSemicolonP
     return $ s <> last e
+
+setP :: Parser Range
+setP = do
+    s <- Tok.setP
+    _ <- choice [Tok.roleP, Tok.sessionP, Tok.timezoneP]
+    ts <- P.many Tok.notSemicolonP
+    pure $ case reverse ts of
+        [] -> s
+        e:_ -> s <> e

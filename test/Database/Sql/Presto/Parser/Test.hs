@@ -333,6 +333,17 @@ testParser = test
         , "SELECT a,b FROM (foo CROSS JOIN bar);"
         , "SELECT a,b FROM (foo CROSS JOIN bar) a;"
         , "SELECT a,b FROM (foo CROSS JOIN bar) a (a,b);"
+
+        -- test set statement
+        , "SET ROLE NONE;"
+        , "SET SESSION optimize_hash_generation = true;"
+        , "SET SESSION data.optimize_locality_enabled = false;"
+        , "SET TIME ZONE LOCAL;"
+        , "SET TIME ZONE '-08:00';"
+        , "SET TIME ZONE INTERVAL '10' HOUR;"
+        , "SET TIME ZONE INTERVAL -'08:00' HOUR TO MINUTE;"
+        , "SET TIME ZONE 'America/Los_Angeles';"
+        , "SET TIME ZONE concat_ws('/', 'America', 'Los_Angeles');"
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)
