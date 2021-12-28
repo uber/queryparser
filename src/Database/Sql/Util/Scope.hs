@@ -42,6 +42,7 @@ module Database.Sql.Util.Scope
 
 import Data.Maybe (mapMaybe)
 import Data.Either (lefts, rights)
+import Data.List (find)
 import Database.Sql.Type
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -67,6 +68,7 @@ makeResolverInfo dialect catalog = ResolverInfo
         if shouldCTEsShadowTables dialect
          then \ f x -> f x
          else \ _ x -> x
+    , lambdaScope = []
     , selectScope = getSelectScope dialect
     , lcolumnsAreVisibleInLateralViews = areLcolumnsVisibleInLateralViews dialect
     , ..
@@ -562,7 +564,7 @@ resolveExpr (LikeExpr info op escape pattern expr) = do
     pure $ LikeExpr info op escape' pattern' expr'
 
 resolveExpr (ConstantExpr info constant) = pure $ ConstantExpr info constant
-resolveExpr (ColumnExpr info column) = ColumnExpr info <$> resolveColumnName column
+resolveExpr (ColumnExpr info column) = resolveLambdaParamOrColumnName info column
 resolveExpr (InListExpr info list expr) = InListExpr info <$> mapM resolveExpr list <*> resolveExpr expr
 resolveExpr (InSubqueryExpr info query expr) = do
     query' <- resolveQuery query
@@ -598,6 +600,10 @@ resolveExpr (FieldAccessExpr info expr field) = FieldAccessExpr info <$> resolve
 resolveExpr (ArrayAccessExpr info expr idx) = ArrayAccessExpr info <$> resolveExpr expr <*> resolveExpr idx
 resolveExpr (TypeCastExpr info onFail expr type_) = TypeCastExpr info onFail <$> resolveExpr expr <*> pure type_
 resolveExpr (VariableSubstitutionExpr info) = pure $ VariableSubstitutionExpr info
+resolveExpr (LambdaParamExpr info param) = pure $ LambdaParamExpr info param
+resolveExpr (LambdaExpr info params body) = do
+    expr <- bindLambdaParams params $ resolveExpr body
+    pure $ LambdaExpr info params expr
 
 resolveOrder :: [Expr ResolvedNames a]
              -> Order RawNames a
@@ -678,11 +684,21 @@ resolveTableRef tableName = do
     ResolverInfo{catalog = Catalog{..}, bindings = Bindings{..}} <- ask
     lift $ lift $ catalogResolveTableRef boundCTEs tableName
 
-
 resolveColumnName :: forall a . OQColumnName a -> Resolver RColumnRef a
 resolveColumnName columnName = do
     (Catalog{..}, Bindings{..}) <- asks (catalog &&& bindings)
     lift $ lift $ catalogResolveColumnName boundColumns columnName
+
+resolveLambdaParamOrColumnName :: forall a . a -> OQColumnName a -> Resolver (Expr ResolvedNames) a
+resolveLambdaParamOrColumnName info columnName = do
+    params <- asks lambdaScope
+    case isParam params columnName of 
+        Just name -> pure $ LambdaParamExpr info name
+        Nothing -> ColumnExpr info <$> resolveColumnName columnName
+  where
+    isParam :: [[LambdaParam a]] -> OQColumnName a -> Maybe (LambdaParam a)
+    isParam _ (QColumnName _ (Just _) _) = Nothing
+    isParam params (QColumnName _ Nothing name) = find (\(LambdaParam _ pname _) -> pname == name) $ concat params
 
 
 resolvePartition :: Partition RawNames a -> Resolver (Partition ResolvedNames) a

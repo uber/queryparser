@@ -418,6 +418,8 @@ data Expr r a
     | ArrayAccessExpr a (Expr r a) (Expr r a)
     | TypeCastExpr a CastFailureAction (Expr r a) (DataType a)
     | VariableSubstitutionExpr a
+    | LambdaParamExpr a (LambdaParam a)
+    | LambdaExpr a [LambdaParam a] (Expr r a)
 
 deriving instance (ConstrainSNames Data r a, Data r) => Data (Expr r a)
 deriving instance Generic (Expr r a)
@@ -948,6 +950,18 @@ instance ConstrainSNames ToJSON r a => ToJSON (Expr r a) where
         , "info" .= info
         ]
 
+    toJSON (LambdaParamExpr info param) = object
+        [ "tag" .= String "LambdaParamExpr"
+        , "info" .= info
+        , "param" .= param
+        ]
+
+    toJSON (LambdaExpr info params body) = object
+        [ "tag" .= String "LambdaExpr"
+        , "info" .= info
+        , "params" .= params
+        , "body" .= body
+        ]
 
 instance ToJSON a => ToJSON (ArrayIndex a) where
     toJSON (ArrayIndex info value) = object

@@ -198,6 +198,8 @@ instance HasInfo (Expr r a) where
     getInfo (ArrayAccessExpr info _ _) = info
     getInfo (TypeCastExpr info _ _ _) = info
     getInfo (VariableSubstitutionExpr info) = info
+    getInfo (LambdaParamExpr info _) = info
+    getInfo (LambdaExpr info _ _) = info
 
 instance HasInfo (Filter r a) where
     type Info (Filter r a) = a
@@ -387,3 +389,7 @@ instance HasInfo (Escape r a) where
 instance HasInfo (Pattern r a) where
     type Info (Pattern r a) = a
     getInfo = getInfo . patternExpr
+
+instance HasInfo (LambdaParam a) where
+    type Info (LambdaParam a) = a
+    getInfo (LambdaParam info _ _) = info

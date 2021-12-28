@@ -320,6 +320,8 @@ getJoinsExpr (FieldAccessExpr _ expr field) = go expr $ FieldChain $ M.singleton
 getJoinsExpr (ArrayAccessExpr _ expr index) = M.unionsWith (<>) <$> mapM getJoinsExpr [expr, index]
 getJoinsExpr (TypeCastExpr _ _ expr _) = getJoinsExpr expr
 getJoinsExpr (VariableSubstitutionExpr _) = return M.empty
+getJoinsExpr (LambdaParamExpr _ _) = return M.empty
+getJoinsExpr (LambdaExpr _ _ body) = getJoinsExpr body
 
 getJoinsFilter :: Filter ResolvedNames a -> Scoped ()
 getJoinsFilter (Filter _ expr) = void $ getJoinsExpr expr
