@@ -231,13 +231,14 @@ selectP = do
     let selectTimeseries = Nothing
     selectGroup <- optionMaybe $ local (introduceAliases aliases) groupP
     selectHaving <- optionMaybe $ local (introduceAliases aliases) havingP
-    let selectNamedWindow = Nothing
-        Just selectInfo = sconcat $ Just r :|
+    selectNamedWindow <- optionMaybe $ local (introduceAliases aliases) namedWindowP
+    let Just selectInfo = sconcat $ Just r :|
             [ Just $ getInfo selectCols
             , getInfo <$> selectFrom
             , getInfo <$> selectWhere
             , getInfo <$> selectGroup
             , getInfo <$> selectHaving
+            , getInfo <$> selectNamedWindow
             ]
 
     pure Select{..}
@@ -248,6 +249,38 @@ selectP = do
         _ <- selectionP (-1) `sepBy1` Tok.commaP
         from <- optionMaybe fromP
         return $ tableAliases from
+
+    namedWindowP =
+      do
+        r <- Tok.windowP
+        windows <- (flip sepBy1) Tok.commaP $ do
+          name <- windowNameP
+          _ <- Tok.asP
+          s <- Tok.openP
+          window <- choice
+              [ do
+                  partition <- optionMaybe partitionP
+                  order <- option [] orderInWindowClauseP
+                  frame <- optionMaybe frameP
+                  e <- Tok.closeP
+                  let info = s <> e
+                  return $ Left $ WindowExpr info partition order frame
+              , do
+                  inherit <- windowNameP
+                  partition <- optionMaybe partitionP
+                  order <- option [] orderInWindowClauseP
+                  frame <- optionMaybe frameP
+                  e <- Tok.closeP
+                  let info = s <> e
+                  return $ Right $ PartialWindowExpr info inherit partition order frame
+              ]
+
+          let infof = (getInfo name <>)
+          return $ case window of
+            Left w -> NamedWindowExpr (infof $ getInfo w) name w
+            Right pw -> NamedPartialWindowExpr (infof $ getInfo pw) name pw
+        let info = L.foldl' (<>) r $ fmap getInfo windows
+        return $ SelectNamedWindow info windows
 
 
 distinctP :: Parser Distinct
@@ -905,6 +938,59 @@ arrayPrimaryExprP = do
     r' <- Tok.closeBracketP
     return $ ArrayExpr (r <> r') exprs
 
+frameP :: Parser (Frame Range)
+frameP = do
+    ftype <- choice
+        [ RowFrame <$> Tok.rowsP
+        , RangeFrame <$> Tok.rangeP
+        ]
+
+    choice
+        [ do
+            _ <- Tok.betweenP
+            start <- frameBoundP
+            _ <- Tok.andP
+            end <- frameBoundP
+
+            let r = getInfo ftype <> getInfo end
+            return $ Frame r ftype start (Just end)
+
+        , do
+            start <- frameBoundP
+
+            let r = getInfo ftype <> getInfo start
+            return $ Frame r ftype start Nothing
+        ]
+
+frameBoundP :: Parser (FrameBound Range)
+frameBoundP = choice
+    [ fmap Unbounded $ (<>)
+        <$> Tok.unboundedP
+        <*> choice [ Tok.precedingP, Tok.followingP ]
+
+    , fmap CurrentRow $ (<>) <$> Tok.currentP <*> Tok.rowP
+    , constantP >>= \ expr -> choice
+        [ Tok.precedingP >>= \ r ->
+            return $ Preceding (getInfo expr <> r) expr
+
+        , Tok.followingP >>= \ r ->
+            return $ Following (getInfo expr <> r) expr
+        ]
+    ]
+
+windowNameP :: Parser (WindowName Range)
+windowNameP =
+  do
+    (name, r) <- Tok.windowNameP
+    return $ WindowName r name
+
+partitionP :: Parser (Partition RawNames Range)
+partitionP = do
+    r <- Tok.partitionP
+    _ <- Tok.byP
+    exprs <- exprP `sepBy1` Tok.commaP
+    return $ PartitionBy (sconcat $ r :| map getInfo exprs) exprs
+
 dataTypeP :: Parser (DataType Range)
 dataTypeP = foldl (flip ($)) <$> typeP <*> many arraySuffixP
   where
@@ -1042,61 +1128,53 @@ functionCallPrimaryExprP = do
 overP :: Parser (OverSubExpr RawNames Range)
 overP = do
     start <- Tok.overP
-    _ <- Tok.openP
+    subExpr <- choice
+        [ Left <$> windowP
+        , Right <$> windowNameP
+        ]
+    return $ case subExpr of
+      Left w -> mergeWindowInfo start w
+      Right wn -> OverWindowName (start <> getInfo wn) wn
+  where
+    windowP :: Parser (OverSubExpr RawNames Range)
+    windowP = do
+      start' <- Tok.openP
+      expr <- choice
+          [ Left <$> windowExprP start'
+          , Right <$> partialWindowExprP start'
+          ]
+      return $ case expr of
+        Left w -> OverWindowExpr (start' <> getInfo w) w
+        Right pw -> OverPartialWindowExpr (start' <> getInfo pw) pw
+
+    mergeWindowInfo :: Range -> OverSubExpr RawNames Range -> OverSubExpr RawNames Range
+    mergeWindowInfo r = \case
+        OverWindowExpr r' WindowExpr{..} ->
+            OverWindowExpr (r <> r') $ WindowExpr { windowExprInfo = windowExprInfo <> r , ..}
+        OverWindowName r' n -> OverWindowName (r <> r') n
+        OverPartialWindowExpr r' PartialWindowExpr{..} ->
+            OverPartialWindowExpr (r <> r') $ PartialWindowExpr { partWindowExprInfo = partWindowExprInfo <> r , ..}
+
+windowExprP :: Range -> Parser (WindowExpr RawNames Range)
+windowExprP start =
+  do
     partition <- optionMaybe partitionP
     order <- option [] orderInWindowClauseP
     frame <- optionMaybe frameP
     end <- Tok.closeP
     let info = start <> end
-    return $ OverWindowExpr info $ WindowExpr info partition order frame
-  where
-    partitionP :: Parser (Partition RawNames Range)
-    partitionP = do
-        r <- Tok.partitionP
-        _ <- Tok.byP
-        exprs <- exprP `sepBy1` Tok.commaP
-        return $ PartitionBy (sconcat $ r :| map getInfo exprs) exprs
+    return (WindowExpr info partition order frame)
 
-    frameP :: Parser (Frame Range)
-    frameP = do
-        ftype <- choice
-            [ RowFrame <$> Tok.rowsP
-            , RangeFrame <$> Tok.rangeP
-            ]
-
-        choice
-            [ do
-                _ <- Tok.betweenP
-                start <- frameBoundP
-                _ <- Tok.andP
-                end <- frameBoundP
-
-                let r = getInfo ftype <> getInfo end
-                return $ Frame r ftype start (Just end)
-
-            , do
-                start <- frameBoundP
-
-                let r = getInfo ftype <> getInfo start
-                return $ Frame r ftype start Nothing
-            ]
-
-    frameBoundP :: Parser (FrameBound Range)
-    frameBoundP = choice
-        [ fmap Unbounded $ (<>)
-            <$> Tok.unboundedP
-            <*> choice [ Tok.precedingP, Tok.followingP ]
-
-        , fmap CurrentRow $ (<>) <$> Tok.currentP <*> Tok.rowP
-
-        , numberConstantP >>= \ expr -> choice
-            [ Tok.precedingP >>= \ r ->
-                return $ Preceding (getInfo expr <> r) expr
-
-            , Tok.followingP >>= \ r ->
-                return $ Following (getInfo expr <> r) expr
-            ]
-        ]
+partialWindowExprP :: Range -> Parser (PartialWindowExpr RawNames Range)
+partialWindowExprP start =
+  do
+    inherit <- windowNameP
+    partition <- optionMaybe partitionP
+    order <- option [] orderInWindowClauseP
+    frame <- optionMaybe frameP
+    end <- Tok.closeP
+    let info = start <> end
+    return (PartialWindowExpr info inherit partition order frame)
 
 orderTopLevelP :: Parser (Range, [Order RawNames Range])
 orderTopLevelP = orderExprP False True
@@ -1568,3 +1646,16 @@ setP = do
     pure $ case reverse ts of
         [] -> s
         e:_ -> s <> e
+
+constantP :: Parser (Constant Range)
+constantP = choice
+    [ uncurry (flip StringConstant)
+        <$> (try (optional Tok.timestampP) >> Tok.stringP)
+
+    , uncurry (flip NumericConstant) <$> Tok.numberP
+    , NullConstant <$> Tok.nullP
+    , uncurry (flip BooleanConstant) <$> choice
+        [ Tok.trueP >>= \ r -> return (True, r)
+        , Tok.falseP >>= \ r -> return (False, r)
+        ]
+    ]

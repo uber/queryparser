@@ -344,6 +344,72 @@ testParser = test
         , "SET TIME ZONE INTERVAL -'08:00' HOUR TO MINUTE;"
         , "SET TIME ZONE 'America/Los_Angeles';"
         , "SET TIME ZONE concat_ws('/', 'America', 'Los_Angeles');"
+
+        -- Named windows can substitute for window exprs in OVER clauses
+        , "SELECT RANK() OVER x FROM potato WINDOW x AS (PARTITION BY a ORDER BY b ASC);"
+        -- They can also be inherited, as long as orderby is not double-defined
+        , TL.unlines
+            [ "SELECT RANK() OVER (x ORDER BY b ASC),"
+            , "DENSE_RANK() OVER (x ORDER BY b DESC)"
+            , "FROM potato WINDOW x AS (PARTITION BY a);"
+            ]
+        , TL.unlines
+            [ "SELECT RANK() OVER (x ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)"
+            , "FROM potato WINDOW x AS (PARTITION BY a ORDER BY b ASC);"
+            ]
+        -- Unlike vertica, hive can have anything in its named window clause
+        -- Which is vomitous, since frame clauses mean nothing without order
+        , "SELECT RANK() OVER (x) FROM potato WINDOW x AS (PARTITION BY a);"
+        , "SELECT RANK() OVER (x) FROM potato WINDOW x AS (ORDER BY a);"
+        , "SELECT RANK() OVER (x) FROM potato WINDOW x AS (ROWS UNBOUNDED PRECEDING);"
+        , "SELECT RANK() OVER (x) FROM potato WINDOW x AS ();"
+        , "SELECT RANK() OVER (x) FROM potato WINDOW x AS (PARTITION BY a ORDER BY a ROWS UNBOUNDED PRECEDING);"
+        -- Named windows can also inherit from each other,
+        -- similar to WITH clauses
+        , TL.unlines
+            [ "SELECT RANK() OVER (w1 ORDER BY sal DESC),"
+            , "RANK() OVER w2"
+            , "FROM EMP"
+            , "WINDOW w1 AS (PARTITION BY deptno), w2 AS (w1 ORDER BY sal);"
+            ]
+        -- In hive, they can inherit in all their glory.
+        -- Ambiguous definitions? Frames without orders? It's got it.
+        , TL.unlines
+            [ "SELECT RANK() OVER (w2) FROM EMP"
+            , "WINDOW w1 AS (PARTITION BY deptno),"
+            , "w2 AS (w1 PARTITION BY alt ORDER BY sal);"
+            ]
+        , TL.unlines
+            [ "SELECT RANK() OVER (w2) FROM EMP"
+            , "WINDOW w1 AS (PARTITION BY deptno),"
+            , "w2 AS (w1 ORDER BY sal ROWS UNBOUNDED PRECEDING);"
+            ]
+        , TL.unlines
+            [ "SELECT RANK() OVER (w2 PARTITION BY foo) FROM EMP"
+            , "WINDOW w1 AS (PARTITION BY deptno),"
+            , "w2 AS (w1 PARTITION BY sal ROWS UNBOUNDED PRECEDING);"
+            ]
+        , TL.unlines
+            [ "SELECT RANK() OVER (w2 PARTITION BY a ORDER BY b ROWS UNBOUNDED PRECEDING)"
+            , "FROM EMP"
+            , "WINDOW w1 AS (PARTITION BY c ORDER BY d ROWS UNBOUNDED PRECEDING),"
+            , "w2 AS (w1 PARTITION BY e ORDER BY f ROWS UNBOUNDED PRECEDING);"
+            ]
+        -- These should parse Successfully, but fail to resolve:
+        -- Named window uses cannot include already defined components
+        , TL.unlines
+            [ "SELECT RANK() OVER (x ORDER BY c) FROM potato"
+            , "WINDOW x AS (PARTITION BY a ORDER BY b);"
+            ]
+        -- Named windows must have unique names
+        , TL.unlines
+            [ "SELECT RANK() OVER x FROM potato"
+            , "WINDOW x as (PARTITION BY a), x AS (PARTITION BY b);"
+            ]
+        , TL.unlines
+            [ "SELECT RANK() OVER (x) FROM potato"
+            , "WINDOW x AS (ORDER BY b);"
+            ]
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)

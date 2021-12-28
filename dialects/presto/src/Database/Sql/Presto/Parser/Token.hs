@@ -644,3 +644,9 @@ roleP = keywordP "role"
 
 sessionP :: Parser Range
 sessionP = keywordP "session"
+
+windowP :: Parser Range
+windowP = keywordP "window"
+
+windowNameP :: Parser (Text, Range)
+windowNameP = P.tokenPrim showTok posFromTok testNameTok
