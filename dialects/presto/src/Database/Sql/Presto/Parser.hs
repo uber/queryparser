@@ -438,6 +438,11 @@ columnAliasP = do
     (name, r) <- Tok.columnNameP
     makeColumnAlias r name
 
+lambdaParamP :: Parser (LambdaParam Range)
+lambdaParamP = do
+    (name, r) <- Tok.lambdaParamP
+    makeLambdaParam r name
+
 joinP :: Parser (Tablish RawNames Range -> Tablish RawNames Range)
 joinP = crossJoinP <|> regularJoinP <|> naturalJoinP
   where
@@ -696,7 +701,9 @@ selectionP idx = try selectStarP <|> do
             (name, r) <- Tok.columnNameP
             makeColumnAlias r name
 
-        , makeExprAlias expr idx'
+        , case expr of
+            LambdaExpr {} -> fail "Lambda expression should always be used inside a function"
+            _ -> makeExprAlias expr idx'
         ]
 
 countingSepBy1 :: (Integer -> Parser b) -> Parser c -> Parser [b]
@@ -719,6 +726,9 @@ makeTableAlias r alias = TableAlias r alias . TableAliasId <$> getNextCounter
 
 makeColumnAlias :: Range -> Text -> Parser (ColumnAlias Range)
 makeColumnAlias r alias = ColumnAlias r alias . ColumnAliasId <$> getNextCounter
+
+makeLambdaParam :: Range -> Text -> Parser (LambdaParam Range)
+makeLambdaParam r name = LambdaParam r name . LambdaParamId <$> getNextCounter
 
 makeDummyAlias :: Range -> Integer -> Parser (ColumnAlias Range)
 makeDummyAlias r idx = makeColumnAlias r $ TL.pack $ "_col" ++ show idx
@@ -743,6 +753,8 @@ makeExprAlias (FieldAccessExpr info _ _) idx = makeDummyAlias info idx
 makeExprAlias (ArrayAccessExpr info _ _) idx = makeDummyAlias info idx
 makeExprAlias (TypeCastExpr _ _ expr _) idx = makeExprAlias expr idx
 makeExprAlias (VariableSubstitutionExpr _) _ = fail "Unsupported variable substitution in Presto: unused expr-type in this dialect"
+makeExprAlias LambdaParamExpr {} _ = error "Unreachable, unresolved expr can not be lambda param"
+makeExprAlias LambdaExpr {} _ = error "Unreachable, selection parser should reject lambda expression"
 
 
 unOpP :: Text -> Parser (Expr RawNames Range -> Expr RawNames Range)
@@ -856,6 +868,7 @@ primaryExprP = foldl (flip ($)) <$> baseP <*> many (arrayAccessP <|> structAcces
     baseP = choice
         [ extractPrimaryExprP
         , normalizePrimaryExprP
+        , try lambdaP
         , try substringPrimaryExprP -- try is because `substring` is both a special-form function and a regular function
         , try positionPrimaryExprP -- try is because `position` could be a column name / UDF function name
         , bareFuncPrimaryExprP
@@ -1124,6 +1137,22 @@ functionCallPrimaryExprP = do
         expr <- exprP
         r' <- Tok.closeP
         return $ Filter (r <> r') expr
+
+lambdaP :: Parser (Expr RawNames Range) 
+lambdaP = do
+    (params, start) <- choice
+        [ do
+            s <- Tok.openP
+            params <- lambdaParamP `sepBy` Tok.commaP
+            _ <- Tok.closeP
+            return (params, s)
+        , do
+            p <- lambdaParamP  
+            return ([p], getInfo p)
+        ]
+    _ <- Tok.symbolP "->"
+    body <- exprP
+    return $ LambdaExpr (start <> getInfo body) params body
 
 overP :: Parser (OverSubExpr RawNames Range)
 overP = do

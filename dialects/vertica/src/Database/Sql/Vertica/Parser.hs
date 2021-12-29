@@ -1022,8 +1022,6 @@ makeExprAlias (InSubqueryExpr info _ _) = makeDummyAlias info
 makeExprAlias (BetweenExpr info _ _ _) = makeDummyAlias info
 makeExprAlias (OverlapsExpr info _ _) = makeDummyAlias info
 makeExprAlias (AtTimeZoneExpr info _ _) = makeColumnAlias info "timezone" -- because reasons
-makeExprAlias LambdaParamExpr {} = error "Lambda param expression should always be used inside a lambda body"
-makeExprAlias LambdaExpr {} = error "Lambda expression should always be used inside a function"
 
 -- function expressions get the name of the function
 makeExprAlias (FunctionExpr info (QFunctionName _ _ name) _ _ _ _ _) = makeColumnAlias info name
@@ -1034,7 +1032,8 @@ makeExprAlias (FieldAccessExpr _ _ _) = fail "Unsupported struct access in Verti
 makeExprAlias (ArrayAccessExpr _ _ _) = fail "Unsupported array access in Vertica: unused datatype in this dialect"
 makeExprAlias (TypeCastExpr _ _ expr _) = makeExprAlias expr
 makeExprAlias (VariableSubstitutionExpr _) = fail "Unsupported variable substitution in Vertica: unused datatype in this dialect"
-
+makeExprAlias LambdaParamExpr {} = error "Unreachable, vertica does not support lambda"
+makeExprAlias LambdaExpr {} = error "Unreachable, vertica does not support lambda"
 
 aliasP :: Expr RawNames Range -> Parser (ColumnAlias Range)
 aliasP expr = choice

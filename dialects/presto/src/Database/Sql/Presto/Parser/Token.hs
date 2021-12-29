@@ -308,6 +308,16 @@ columnNameP = P.tokenPrim showTok posFromTok testTok
 
         _ -> Nothing
 
+lambdaParamP :: Parser (Text, Range)
+lambdaParamP = P.tokenPrim showTok posFromTok testTok
+  where
+    testTok (tok, s, e) = case tok of
+        TokWord True name -> Just (name, Range s e)
+        TokWord False name
+            | wordCanBeColumnName (wordInfo name) -> Just (name, Range s e)
+
+        _ -> Nothing
+
 structFieldNameP :: Parser (Text, Range)
 structFieldNameP = P.tokenPrim showTok posFromTok testTok
   where

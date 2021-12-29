@@ -57,6 +57,7 @@ operators = sortBy (flip compare)
     , "||"
     , "(", ")", "[", "]", ",", ";"
     , "?"
+    , "->"
     ]
 
 isOperator :: Char -> Bool

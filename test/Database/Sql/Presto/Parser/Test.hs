@@ -410,6 +410,11 @@ testParser = test
             [ "SELECT RANK() OVER (x) FROM potato"
             , "WINDOW x AS (ORDER BY b);"
             ]
+
+        -- test lambda
+        , "SELECT numbers, transform(numbers, (n) -> n * n);"
+        , "SELECT transform(prices, n -> TRY_CAST(n AS VARCHAR) || '$');"
+        , "SELECT * FROM foo WHERE any_match(numbers, n ->  COALESCE(n, 0) > 100);"
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)
@@ -440,6 +445,8 @@ testParser = test
       , "WITH x AS (SELECT 1 AS a FROM dual)  SELECT * FROM X ORDER BY a  UNION  SELECT * FROM X            ;"
       , "SELECT 1 EXCEPT    ALL SELECT 1;"
       , "SELECT 1 INTERSECT ALL SELECT 1;"
+      , "SELECT n -> n;"
+      , "SELECT (n) -> n;"
       ]
 
     , ticket "T655130"
