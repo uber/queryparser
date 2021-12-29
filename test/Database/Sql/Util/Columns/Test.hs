@@ -115,6 +115,17 @@ testColumnAccesses = test
               , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
               ]
           )
+        , testPresto "SELECT f(a -> a + b) FROM bar;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
+        , testPresto "SELECT f(a, a -> a + b) FROM bar;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
 
         -- FROM
         , testAll "SELECT 1 FROM foo JOIN bar ON foo.a = bar.a;" defaultTestCatalog
