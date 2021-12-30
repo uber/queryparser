@@ -121,6 +121,8 @@ class (Monad (EvalRow e), Monad (EvalMonad e), Traversable (EvalRow e)) => Evalu
     handleConstant :: Proxy e -> Constant a -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
     handleCases :: Proxy e -> [(Expr ResolvedNames Range, Expr ResolvedNames Range)] -> Maybe (Expr ResolvedNames Range) -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
     handleFunction :: Proxy e -> FunctionName Range -> Distinct -> [Expr ResolvedNames Range] -> [(ParamName Range, Expr ResolvedNames Range)] -> Maybe (Filter ResolvedNames Range) -> Maybe (OverSubExpr ResolvedNames Range) -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
+    handleLambdaParam :: Proxy e -> LambdaParam Range -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
+    handleLambda :: Proxy e -> [LambdaParam Range] -> Expr ResolvedNames Range -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
     handleGroups ::  [RColumnRef ()] -> EvalRow e ([EvalValue e], EvalRow e [EvalValue e]) -> EvalRow e (RecordSet e)
     handleLike :: Proxy e -> Operator a -> Maybe (Escape ResolvedNames Range) -> Pattern ResolvedNames Range -> Expr ResolvedNames Range -> EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
     handleOrder :: Proxy e -> [Order ResolvedNames Range] -> RecordSet e -> EvalT e 'TableContext (EvalMonad e) (RecordSet e)
@@ -387,6 +389,8 @@ instance Evaluation e => Evaluate e (Expr ResolvedNames Range) where
     eval _ (ArrayAccessExpr _ array idx) = error "array indexing not yet supported" array idx -- T636558
     eval _ (TypeCastExpr _ onFail expr type_) = handleTypeCast onFail expr type_
     eval _ (VariableSubstitutionExpr _) = throwError "no way to evaluate unsubstituted variable"
+    eval p (LambdaParamExpr _ param) = handleLambdaParam p param
+    eval p (LambdaExpr _ params body) = handleLambda p params body
 
 instance Evaluation e => Evaluate e (Constant a) where
     type EvalResult e (Constant a) = EvalT e 'ExprContext (EvalMonad e) (EvalValue e)
