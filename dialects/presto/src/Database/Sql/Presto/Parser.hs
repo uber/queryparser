@@ -948,7 +948,7 @@ arrayPrimaryExprP :: Parser (Expr RawNames Range)
 arrayPrimaryExprP = do
     r <- Tok.arrayP
     _ <- Tok.openBracketP
-    exprs <- exprP `sepBy1` Tok.commaP
+    exprs <- exprP `sepBy` Tok.commaP
     r' <- Tok.closeBracketP
     return $ ArrayExpr (r <> r') exprs
 

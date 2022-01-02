@@ -119,6 +119,7 @@ testParser = test
         , "SELECT CURRENT_TIME(1);"
         , "SELECT CURRENT_DATE;"
         , "SELECT ARRAY[1+1, LOCALTIME];"
+        , "SELECT ARRAY[];"
         , "SELECT CAST(NULL AS BIGINT);"
         , "SELECT TRY_CAST(NULL AS BIGINT);"
         , "SELECT TRY_CAST(NULL AS BIGINT ARRAY);"
