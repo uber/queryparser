@@ -121,6 +121,9 @@ closeAngleP = symbolP ">"
 questionMarkP :: Parser Range
 questionMarkP = symbolP "?"
 
+equalP :: Parser Range
+equalP = symbolP "="
+
 stringP :: Parser (ByteString, Range)
 stringP = P.tokenPrim showTok posFromTok testTok
   where
@@ -310,6 +313,16 @@ columnNameP = P.tokenPrim showTok posFromTok testTok
 
 lambdaParamP :: Parser (Text, Range)
 lambdaParamP = P.tokenPrim showTok posFromTok testTok
+  where
+    testTok (tok, s, e) = case tok of
+        TokWord True name -> Just (name, Range s e)
+        TokWord False name
+            | wordCanBeColumnName (wordInfo name) -> Just (name, Range s e)
+
+        _ -> Nothing
+
+propertyNameP :: Parser (Text, Range)
+propertyNameP = P.tokenPrim showTok posFromTok testTok
   where
     testTok (tok, s, e) = case tok of
         TokWord True name -> Just (name, Range s e)
@@ -660,3 +673,15 @@ windowP = keywordP "window"
 
 windowNameP :: Parser (Text, Range)
 windowNameP = P.tokenPrim showTok posFromTok testNameTok
+
+createP :: Parser Range
+createP = keywordP "create"
+
+commentP :: Parser Range
+commentP = keywordP "comment"
+
+noP :: Parser Range
+noP = keywordP "no"
+
+dataP :: Parser Range
+dataP = keywordP "data"

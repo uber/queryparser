@@ -41,7 +41,7 @@ import           Data.Char (isDigit)
 import           Data.Foldable (fold)
 import qualified Data.List as L
 import           Data.List.NonEmpty (NonEmpty ((:|)))
-import           Data.Maybe (catMaybes)
+import           Data.Maybe (catMaybes, fromMaybe)
 import           Data.Monoid (Endo (..))
 import           Data.Semigroup (Semigroup (..), sconcat)
 import           Data.Set (Set)
@@ -127,6 +127,7 @@ statementP = choice
     , GrantStmt <$> grantP
     , RevokeStmt <$> revokeP
     , InsertStmt <$> insertP
+    , CreateTableStmt <$> createTableP
     ]
 
 queryP :: Parser (Query RawNames Range)
@@ -1688,3 +1689,87 @@ constantP = choice
         , Tok.falseP >>= \ r -> return (False, r)
         ]
     ]
+
+-- TODO: support create table with column definitions
+createTableP :: Parser (CreateTable Presto RawNames Range)
+createTableP = do
+    s <- Tok.createP
+    _ <- Tok.tableP
+
+    let createTablePersistence = Persistent
+        createTableExternality = Internal
+        createTableExtra = Nothing
+
+    createTableIfNotExists <- ifNotExistsP
+
+    createTableName <- tableNameP 
+    columns <- optionMaybe columnListP
+    _ <- optional commentP 
+    _ <- optional propertiesP
+    createTableDefinition <- choice [createTableAsP columns]
+
+    let e = getInfo createTableDefinition
+        createTableInfo = s <> e
+    pure CreateTable{..}
+
+  where
+    createTableAsP columns = do
+        s <- Tok.asP
+        (query, qInfo) <- choice 
+            [ do
+                s' <- Tok.openP
+                q <- queryP
+                e <- Tok.closeP
+                return (q, s' <> e)
+            , do
+                q <- queryP
+                return (q, getInfo q)
+            ]
+        withData <- optionMaybe withDataP
+        let e = fromMaybe qInfo withData
+        return $ TableAs (s <> e) columns query
+
+    columnListP :: Parser (NonEmpty (UQColumnName Range))
+    columnListP = do
+        _ <- Tok.openP
+        c:cs <- (`sepBy1` Tok.commaP) $ do
+            (name, r) <- Tok.columnNameP
+            pure $ QColumnName r None name
+        _ <- Tok.closeP
+        pure (c:|cs)
+    
+
+commentP :: Parser Range
+commentP = do
+    s <- Tok.commentP
+    (_, e) <- Tok.stringP
+    return $ s <> e
+
+propertiesP :: Parser Range
+propertiesP = do
+    s <- Tok.withP
+    _ <- Tok.openP
+    _ <- propertyP `sepBy1` Tok.commaP
+    e <- Tok.closeP
+    return $ s <> e
+
+propertyP :: Parser Range
+propertyP = do
+    (_, s) <- Tok.propertyNameP
+    _ <- Tok.equalP
+    e <- exprP
+    return $ s <> getInfo e
+    
+withDataP :: Parser Range
+withDataP = do
+    s <- Tok.withP
+    _ <- optionMaybe Tok.noP
+    e <- Tok.dataP
+    return $ s <> e
+
+ifNotExistsP :: Parser (Maybe Range)
+ifNotExistsP = optionMaybe $ do
+    s <- Tok.ifP
+    _ <- Tok.notP
+    e <- Tok.existsP
+    pure $ s <> e

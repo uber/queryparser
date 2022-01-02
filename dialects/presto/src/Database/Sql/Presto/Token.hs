@@ -123,4 +123,6 @@ wordInfo word = maybe (WordInfo True True True True) id $ M.lookup word $ M.from
     , ("where",             WordInfo False False False False)
     , ("with",              WordInfo False False False False)
     , ("window",            WordInfo False False False False)
+    , ("no",                WordInfo True True True True)
+    , ("data",              WordInfo True True True True)
     ]

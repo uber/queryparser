@@ -415,6 +415,15 @@ testParser = test
         , "SELECT numbers, transform(numbers, (n) -> n * n);"
         , "SELECT transform(prices, n -> TRY_CAST(n AS VARCHAR) || '$');"
         , "SELECT * FROM foo WHERE any_match(numbers, n ->  COALESCE(n, 0) > 100);"
+
+        -- test create table as
+        , "CREATE TABLE t (order_date, total_price) AS SELECT orderdate, totalprice"
+        , "CREATE TABLE t AS (SELECT orderdate, totalprice)"
+        , "CREATE TABLE t COMMENT 'Summary of orders by date' WITH (format = 'ORC') AS SELECT orderdate, totalprice"
+        , "CREATE TABLE IF NOT EXISTS t AS SELECT orderdate, totalprice"
+        , "CREATE TABLE t AS SELECT orderdate, totalprice WITH NO DATA"
+        , "CREATE TABLE t AS SELECT orderdate, totalprice WITH DATA"
+        , "CREATE TABLE IF NOT EXISTS t (a, b) COMMENT 'Summary of orders by date' WITH (format = 'ORC') AS SELECT orderdate, totalprice WITH NO DATA"
        ]
 
     , "Exclude some broken examples" ~: map  (TestCase . parsesUnsuccessfully)
