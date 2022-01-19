@@ -41,7 +41,7 @@ import           Data.Char (isDigit)
 import           Data.Foldable (fold)
 import qualified Data.List as L
 import           Data.List.NonEmpty (NonEmpty ((:|)))
-import           Data.Maybe (catMaybes)
+import           Data.Maybe (catMaybes, fromMaybe)
 import           Data.Monoid (Endo (..))
 import           Data.Semigroup (Semigroup (..), sconcat)
 import           Data.Set (Set)
@@ -63,6 +63,7 @@ statementParser = do
         , PrestoUnhandledStatement <$> showP
         , PrestoUnhandledStatement <$> callP
         , PrestoUnhandledStatement <$> describeP
+        , PrestoUnhandledStatement <$> setP
         ]
     case maybeStmt of
         Just stmt -> terminator >> return stmt
@@ -126,6 +127,7 @@ statementP = choice
     , GrantStmt <$> grantP
     , RevokeStmt <$> revokeP
     , InsertStmt <$> insertP
+    , CreateTableStmt <$> createTableP
     ]
 
 queryP :: Parser (Query RawNames Range)
@@ -230,13 +232,14 @@ selectP = do
     let selectTimeseries = Nothing
     selectGroup <- optionMaybe $ local (introduceAliases aliases) groupP
     selectHaving <- optionMaybe $ local (introduceAliases aliases) havingP
-    let selectNamedWindow = Nothing
-        Just selectInfo = sconcat $ Just r :|
+    selectNamedWindow <- optionMaybe $ local (introduceAliases aliases) namedWindowP
+    let Just selectInfo = sconcat $ Just r :|
             [ Just $ getInfo selectCols
             , getInfo <$> selectFrom
             , getInfo <$> selectWhere
             , getInfo <$> selectGroup
             , getInfo <$> selectHaving
+            , getInfo <$> selectNamedWindow
             ]
 
     pure Select{..}
@@ -247,6 +250,38 @@ selectP = do
         _ <- selectionP (-1) `sepBy1` Tok.commaP
         from <- optionMaybe fromP
         return $ tableAliases from
+
+    namedWindowP =
+      do
+        r <- Tok.windowP
+        windows <- (flip sepBy1) Tok.commaP $ do
+          name <- windowNameP
+          _ <- Tok.asP
+          s <- Tok.openP
+          window <- choice
+              [ do
+                  partition <- optionMaybe partitionP
+                  order <- option [] orderInWindowClauseP
+                  frame <- optionMaybe frameP
+                  e <- Tok.closeP
+                  let info = s <> e
+                  return $ Left $ WindowExpr info partition order frame
+              , do
+                  inherit <- windowNameP
+                  partition <- optionMaybe partitionP
+                  order <- option [] orderInWindowClauseP
+                  frame <- optionMaybe frameP
+                  e <- Tok.closeP
+                  let info = s <> e
+                  return $ Right $ PartialWindowExpr info inherit partition order frame
+              ]
+
+          let infof = (getInfo name <>)
+          return $ case window of
+            Left w -> NamedWindowExpr (infof $ getInfo w) name w
+            Right pw -> NamedPartialWindowExpr (infof $ getInfo pw) name pw
+        let info = L.foldl' (<>) r $ fmap getInfo windows
+        return $ SelectNamedWindow info windows
 
 
 distinctP :: Parser Distinct
@@ -269,6 +304,10 @@ tableAliases from =
         TablishAliasesT (TableAlias _ name _) -> S.singleton name
         TablishAliasesTC (TableAlias _ name _) _ -> S.singleton name
     tablishToTableAlias (TablishSubQuery _ aliases _) = case aliases of
+        TablishAliasesNone -> S.empty
+        TablishAliasesT (TableAlias _ name _) -> S.singleton name
+        TablishAliasesTC (TableAlias _ name _) _ -> S.singleton name
+    tablishToTableAlias (TablishParenthesizedRelation _ aliases _) = case aliases of
         TablishAliasesNone -> S.empty
         TablishAliasesT (TableAlias _ name _) -> S.singleton name
         TablishAliasesTC (TableAlias _ name _) _ -> S.singleton name
@@ -359,7 +398,9 @@ sampledRelationP = do
                   return $ TablishLateralView lateralViewInfo LateralView{..} Nothing
 
             , P.between Tok.openP Tok.closeP $ choice
-                [ relationP
+                [ try $ do
+                      r <- relationP
+                      return $ TablishParenthesizedRelation (getInfo r) placeholder r
                 , do
                       q <- queryP
                       return $ TablishSubQuery (getInfo q) placeholder q
@@ -371,6 +412,7 @@ sampledRelationP = do
                 TablishSubQuery info _ query -> TablishSubQuery info as query
                 TablishJoin _ _ _ _ _ -> error "shouldn't happen"
                 TablishLateralView info LateralView{..} lhs -> TablishLateralView info LateralView{lateralViewAliases = as, ..} lhs
+                TablishParenthesizedRelation info _ relation -> TablishParenthesizedRelation info as relation
         return withAliases
 
     tablishAliasesP :: Parser (TablishAliases Range)
@@ -396,6 +438,11 @@ columnAliasP :: Parser (ColumnAlias Range)
 columnAliasP = do
     (name, r) <- Tok.columnNameP
     makeColumnAlias r name
+
+lambdaParamP :: Parser (LambdaParam Range)
+lambdaParamP = do
+    (name, r) <- Tok.lambdaParamP
+    makeLambdaParam r name
 
 joinP :: Parser (Tablish RawNames Range -> Tablish RawNames Range)
 joinP = crossJoinP <|> regularJoinP <|> naturalJoinP
@@ -655,7 +702,9 @@ selectionP idx = try selectStarP <|> do
             (name, r) <- Tok.columnNameP
             makeColumnAlias r name
 
-        , makeExprAlias expr idx'
+        , case expr of
+            LambdaExpr {} -> fail "Lambda expression should always be used inside a function"
+            _ -> makeExprAlias expr idx'
         ]
 
 countingSepBy1 :: (Integer -> Parser b) -> Parser c -> Parser [b]
@@ -678,6 +727,9 @@ makeTableAlias r alias = TableAlias r alias . TableAliasId <$> getNextCounter
 
 makeColumnAlias :: Range -> Text -> Parser (ColumnAlias Range)
 makeColumnAlias r alias = ColumnAlias r alias . ColumnAliasId <$> getNextCounter
+
+makeLambdaParam :: Range -> Text -> Parser (LambdaParam Range)
+makeLambdaParam r name = LambdaParam r name . LambdaParamId <$> getNextCounter
 
 makeDummyAlias :: Range -> Integer -> Parser (ColumnAlias Range)
 makeDummyAlias r idx = makeColumnAlias r $ TL.pack $ "_col" ++ show idx
@@ -702,6 +754,8 @@ makeExprAlias (FieldAccessExpr info _ _) idx = makeDummyAlias info idx
 makeExprAlias (ArrayAccessExpr info _ _) idx = makeDummyAlias info idx
 makeExprAlias (TypeCastExpr _ _ expr _) idx = makeExprAlias expr idx
 makeExprAlias (VariableSubstitutionExpr _) _ = fail "Unsupported variable substitution in Presto: unused expr-type in this dialect"
+makeExprAlias LambdaParamExpr {} _ = error "Unreachable, unresolved expr can not be lambda param"
+makeExprAlias LambdaExpr {} _ = error "Unreachable, selection parser should reject lambda expression"
 
 
 unOpP :: Text -> Parser (Expr RawNames Range -> Expr RawNames Range)
@@ -815,6 +869,7 @@ primaryExprP = foldl (flip ($)) <$> baseP <*> many (arrayAccessP <|> structAcces
     baseP = choice
         [ extractPrimaryExprP
         , normalizePrimaryExprP
+        , try lambdaP
         , try substringPrimaryExprP -- try is because `substring` is both a special-form function and a regular function
         , try positionPrimaryExprP -- try is because `position` could be a column name / UDF function name
         , bareFuncPrimaryExprP
@@ -893,9 +948,62 @@ arrayPrimaryExprP :: Parser (Expr RawNames Range)
 arrayPrimaryExprP = do
     r <- Tok.arrayP
     _ <- Tok.openBracketP
-    exprs <- exprP `sepBy1` Tok.commaP
+    exprs <- exprP `sepBy` Tok.commaP
     r' <- Tok.closeBracketP
     return $ ArrayExpr (r <> r') exprs
+
+frameP :: Parser (Frame Range)
+frameP = do
+    ftype <- choice
+        [ RowFrame <$> Tok.rowsP
+        , RangeFrame <$> Tok.rangeP
+        ]
+
+    choice
+        [ do
+            _ <- Tok.betweenP
+            start <- frameBoundP
+            _ <- Tok.andP
+            end <- frameBoundP
+
+            let r = getInfo ftype <> getInfo end
+            return $ Frame r ftype start (Just end)
+
+        , do
+            start <- frameBoundP
+
+            let r = getInfo ftype <> getInfo start
+            return $ Frame r ftype start Nothing
+        ]
+
+frameBoundP :: Parser (FrameBound Range)
+frameBoundP = choice
+    [ fmap Unbounded $ (<>)
+        <$> Tok.unboundedP
+        <*> choice [ Tok.precedingP, Tok.followingP ]
+
+    , fmap CurrentRow $ (<>) <$> Tok.currentP <*> Tok.rowP
+    , constantP >>= \ expr -> choice
+        [ Tok.precedingP >>= \ r ->
+            return $ Preceding (getInfo expr <> r) expr
+
+        , Tok.followingP >>= \ r ->
+            return $ Following (getInfo expr <> r) expr
+        ]
+    ]
+
+windowNameP :: Parser (WindowName Range)
+windowNameP =
+  do
+    (name, r) <- Tok.windowNameP
+    return $ WindowName r name
+
+partitionP :: Parser (Partition RawNames Range)
+partitionP = do
+    r <- Tok.partitionP
+    _ <- Tok.byP
+    exprs <- exprP `sepBy1` Tok.commaP
+    return $ PartitionBy (sconcat $ r :| map getInfo exprs) exprs
 
 dataTypeP :: Parser (DataType Range)
 dataTypeP = foldl (flip ($)) <$> typeP <*> many arraySuffixP
@@ -1031,64 +1139,72 @@ functionCallPrimaryExprP = do
         r' <- Tok.closeP
         return $ Filter (r <> r') expr
 
+lambdaP :: Parser (Expr RawNames Range) 
+lambdaP = do
+    (params, start) <- choice
+        [ do
+            s <- Tok.openP
+            params <- lambdaParamP `sepBy` Tok.commaP
+            _ <- Tok.closeP
+            return (params, s)
+        , do
+            p <- lambdaParamP  
+            return ([p], getInfo p)
+        ]
+    _ <- Tok.symbolP "->"
+    body <- exprP
+    return $ LambdaExpr (start <> getInfo body) params body
+
 overP :: Parser (OverSubExpr RawNames Range)
 overP = do
     start <- Tok.overP
-    _ <- Tok.openP
+    subExpr <- choice
+        [ Left <$> windowP
+        , Right <$> windowNameP
+        ]
+    return $ case subExpr of
+      Left w -> mergeWindowInfo start w
+      Right wn -> OverWindowName (start <> getInfo wn) wn
+  where
+    windowP :: Parser (OverSubExpr RawNames Range)
+    windowP = do
+      start' <- Tok.openP
+      expr <- choice
+          [ Left <$> windowExprP start'
+          , Right <$> partialWindowExprP start'
+          ]
+      return $ case expr of
+        Left w -> OverWindowExpr (start' <> getInfo w) w
+        Right pw -> OverPartialWindowExpr (start' <> getInfo pw) pw
+
+    mergeWindowInfo :: Range -> OverSubExpr RawNames Range -> OverSubExpr RawNames Range
+    mergeWindowInfo r = \case
+        OverWindowExpr r' WindowExpr{..} ->
+            OverWindowExpr (r <> r') $ WindowExpr { windowExprInfo = windowExprInfo <> r , ..}
+        OverWindowName r' n -> OverWindowName (r <> r') n
+        OverPartialWindowExpr r' PartialWindowExpr{..} ->
+            OverPartialWindowExpr (r <> r') $ PartialWindowExpr { partWindowExprInfo = partWindowExprInfo <> r , ..}
+
+windowExprP :: Range -> Parser (WindowExpr RawNames Range)
+windowExprP start =
+  do
     partition <- optionMaybe partitionP
     order <- option [] orderInWindowClauseP
     frame <- optionMaybe frameP
     end <- Tok.closeP
     let info = start <> end
-    return $ OverWindowExpr info $ WindowExpr info partition order frame
-  where
-    partitionP :: Parser (Partition RawNames Range)
-    partitionP = do
-        r <- Tok.partitionP
-        _ <- Tok.byP
-        exprs <- exprP `sepBy1` Tok.commaP
-        return $ PartitionBy (sconcat $ r :| map getInfo exprs) exprs
+    return (WindowExpr info partition order frame)
 
-    frameP :: Parser (Frame Range)
-    frameP = do
-        ftype <- choice
-            [ RowFrame <$> Tok.rowsP
-            , RangeFrame <$> Tok.rangeP
-            ]
-
-        choice
-            [ do
-                _ <- Tok.betweenP
-                start <- frameBoundP
-                _ <- Tok.andP
-                end <- frameBoundP
-
-                let r = getInfo ftype <> getInfo end
-                return $ Frame r ftype start (Just end)
-
-            , do
-                start <- frameBoundP
-
-                let r = getInfo ftype <> getInfo start
-                return $ Frame r ftype start Nothing
-            ]
-
-    frameBoundP :: Parser (FrameBound Range)
-    frameBoundP = choice
-        [ fmap Unbounded $ (<>)
-            <$> Tok.unboundedP
-            <*> choice [ Tok.precedingP, Tok.followingP ]
-
-        , fmap CurrentRow $ (<>) <$> Tok.currentP <*> Tok.rowP
-
-        , numberConstantP >>= \ expr -> choice
-            [ Tok.precedingP >>= \ r ->
-                return $ Preceding (getInfo expr <> r) expr
-
-            , Tok.followingP >>= \ r ->
-                return $ Following (getInfo expr <> r) expr
-            ]
-        ]
+partialWindowExprP :: Range -> Parser (PartialWindowExpr RawNames Range)
+partialWindowExprP start =
+  do
+    inherit <- windowNameP
+    partition <- optionMaybe partitionP
+    order <- option [] orderInWindowClauseP
+    frame <- optionMaybe frameP
+    end <- Tok.closeP
+    let info = start <> end
+    return (PartialWindowExpr info inherit partition order frame)
 
 orderTopLevelP :: Parser (Range, [Order RawNames Range])
 orderTopLevelP = orderExprP False True
@@ -1551,3 +1667,109 @@ describeP = do
     s <- Tok.describeP
     e <- P.many1 Tok.notSemicolonP
     return $ s <> last e
+
+setP :: Parser Range
+setP = do
+    s <- Tok.setP
+    _ <- choice [Tok.roleP, Tok.sessionP, Tok.timezoneP]
+    ts <- P.many Tok.notSemicolonP
+    pure $ case reverse ts of
+        [] -> s
+        e:_ -> s <> e
+
+constantP :: Parser (Constant Range)
+constantP = choice
+    [ uncurry (flip StringConstant)
+        <$> (try (optional Tok.timestampP) >> Tok.stringP)
+
+    , uncurry (flip NumericConstant) <$> Tok.numberP
+    , NullConstant <$> Tok.nullP
+    , uncurry (flip BooleanConstant) <$> choice
+        [ Tok.trueP >>= \ r -> return (True, r)
+        , Tok.falseP >>= \ r -> return (False, r)
+        ]
+    ]
+
+-- TODO: support create table with column definitions
+createTableP :: Parser (CreateTable Presto RawNames Range)
+createTableP = do
+    s <- Tok.createP
+    _ <- Tok.tableP
+
+    let createTablePersistence = Persistent
+        createTableExternality = Internal
+        createTableExtra = Nothing
+
+    createTableIfNotExists <- ifNotExistsP
+
+    createTableName <- tableNameP 
+    columns <- optionMaybe columnListP
+    _ <- optional commentP 
+    _ <- optional propertiesP
+    createTableDefinition <- choice [createTableAsP columns]
+
+    let e = getInfo createTableDefinition
+        createTableInfo = s <> e
+    pure CreateTable{..}
+
+  where
+    createTableAsP columns = do
+        s <- Tok.asP
+        (query, qInfo) <- choice 
+            [ do
+                s' <- Tok.openP
+                q <- queryP
+                e <- Tok.closeP
+                return (q, s' <> e)
+            , do
+                q <- queryP
+                return (q, getInfo q)
+            ]
+        withData <- optionMaybe withDataP
+        let e = fromMaybe qInfo withData
+        return $ TableAs (s <> e) columns query
+
+    columnListP :: Parser (NonEmpty (UQColumnName Range))
+    columnListP = do
+        _ <- Tok.openP
+        c:cs <- (`sepBy1` Tok.commaP) $ do
+            (name, r) <- Tok.columnNameP
+            pure $ QColumnName r None name
+        _ <- Tok.closeP
+        pure (c:|cs)
+    
+
+commentP :: Parser Range
+commentP = do
+    s <- Tok.commentP
+    (_, e) <- Tok.stringP
+    return $ s <> e
+
+propertiesP :: Parser Range
+propertiesP = do
+    s <- Tok.withP
+    _ <- Tok.openP
+    _ <- propertyP `sepBy1` Tok.commaP
+    e <- Tok.closeP
+    return $ s <> e
+
+propertyP :: Parser Range
+propertyP = do
+    (_, s) <- Tok.propertyNameP
+    _ <- Tok.equalP
+    e <- exprP
+    return $ s <> getInfo e
+    
+withDataP :: Parser Range
+withDataP = do
+    s <- Tok.withP
+    _ <- optionMaybe Tok.noP
+    e <- Tok.dataP
+    return $ s <> e
+
+ifNotExistsP :: Parser (Maybe Range)
+ifNotExistsP = optionMaybe $ do
+    s <- Tok.ifP
+    _ <- Tok.notP
+    e <- Tok.existsP
+    pure $ s <> e

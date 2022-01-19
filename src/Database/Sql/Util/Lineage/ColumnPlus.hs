@@ -152,6 +152,10 @@ instance Evaluation ColumnLineage where
             ++ map filterExpr (maybeToList filter')
         )
 
+    handleLambdaParam _ _ = pure emptyColumnPlusSet
+
+    handleLambda p _ body = eval p body
+
     handleGroups cs gs =
         pure $ RecordSet cs $ do
             (g, rs) <- gs

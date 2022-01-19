@@ -8,3 +8,6 @@
 queries/
 schemas/
 results/
+
+/out
+*.iml

@@ -65,7 +65,7 @@ instance Dialect Presto where
         , bindForGroup = bindFromColumns fromColumns
         , bindForHaving = bindFromColumns fromColumns
         , bindForOrder = bindBothColumns fromColumns selectionAliases
-        , bindForNamedWindow = bindColumns [] -- Presto doesn't have this language feature
+        , bindForNamedWindow = bindColumns fromColumns
         }
 
     areLcolumnsVisibleInLateralViews _ = True

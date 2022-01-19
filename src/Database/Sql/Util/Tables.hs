@@ -269,6 +269,7 @@ instance HasTables (Tablish ResolvedNames a) where
     goTables (TablishTable _ _ (RTableRef fqtn _)) = emitTable fqtn
     goTables (TablishTable _ _ (RTableAlias _ _)) = return ()
     goTables (TablishSubQuery _ _ query) = goTables query
+    goTables (TablishParenthesizedRelation _ _ relation) = goTables relation
     goTables (TablishLateralView _ LateralView{..} lhs) = goTables lhs >> mapM_ goTables lateralViewExprs
     goTables (TablishJoin _ _ cond outer inner) = do
         case cond of
@@ -320,6 +321,8 @@ instance HasTables (Expr ResolvedNames a) where
         goTables subscript
     goTables (TypeCastExpr _ _ expr _) = goTables expr
     goTables (VariableSubstitutionExpr _) = return ()
+    goTables (LambdaParamExpr _ _) = return ()
+    goTables (LambdaExpr _ _ body) = goTables body
 
 instance HasTables (Filter ResolvedNames a) where
     goTables (Filter _ expr) = goTables expr

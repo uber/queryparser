@@ -156,6 +156,7 @@ data Tablish r a
     | TablishJoin a (JoinType a) (JoinCondition r a)
             (Tablish r a) (Tablish r a)
     | TablishLateralView a (LateralView r a) (Maybe (Tablish r a))
+    | TablishParenthesizedRelation a (TablishAliases a) (Tablish r a)
 
 deriving instance (ConstrainSNames Data r a, Data r) => Data (Tablish r a)
 deriving instance Generic (Tablish r a)
@@ -417,6 +418,8 @@ data Expr r a
     | ArrayAccessExpr a (Expr r a) (Expr r a)
     | TypeCastExpr a CastFailureAction (Expr r a) (DataType a)
     | VariableSubstitutionExpr a
+    | LambdaParamExpr a (LambdaParam a)
+    | LambdaExpr a [LambdaParam a] (Expr r a)
 
 deriving instance (ConstrainSNames Data r a, Data r) => Data (Expr r a)
 deriving instance Generic (Expr r a)
@@ -947,6 +950,18 @@ instance ConstrainSNames ToJSON r a => ToJSON (Expr r a) where
         , "info" .= info
         ]
 
+    toJSON (LambdaParamExpr info param) = object
+        [ "tag" .= String "LambdaParamExpr"
+        , "info" .= info
+        , "param" .= param
+        ]
+
+    toJSON (LambdaExpr info params body) = object
+        [ "tag" .= String "LambdaExpr"
+        , "info" .= info
+        , "params" .= params
+        , "body" .= body
+        ]
 
 instance ToJSON a => ToJSON (ArrayIndex a) where
     toJSON (ArrayIndex info value) = object
@@ -1225,6 +1240,13 @@ instance ConstrainSNames ToJSON r a => ToJSON (Tablish r a) where
         , "info" .= info
         , "alias" .= alias
         , "query" .= query
+        ]
+
+    toJSON (TablishParenthesizedRelation info alias relation) = object
+        [ "tag" .= String "TablishParenthesizedRelation"
+        , "info" .= info
+        , "alias" .= alias
+        , "realtion" .= relation
         ]
 
     toJSON (TablishJoin info join condition outer inner) = object

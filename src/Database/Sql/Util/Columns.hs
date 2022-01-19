@@ -38,7 +38,7 @@ import           Control.Monad.Reader
 import           Control.Monad.Writer
 
 import           Database.Sql.Type
-import           Database.Sql.Util.Scope (queryColumnNames)
+import           Database.Sql.Util.Scope (queryColumnNames, tablishColumnNames)
 
 type Clause = Text  -- SELECT, WHERE, GROUPBY, etc... for nested clauses,
                     -- report the innermost clause.
@@ -358,6 +358,16 @@ instance HasColumns (Tablish ResolvedNames a) where
             TablishAliasesTC _ cAliases ->
                 tell $ zipWith aliasObservation cAliases (queryColumnDeps query)
 
+    goColumns (TablishParenthesizedRelation _ tablishAliases relation) = do
+        goColumns relation
+
+        case tablishAliases of
+            TablishAliasesNone -> return ()
+            TablishAliasesT _ -> return ()
+            TablishAliasesTC _ cAliases ->
+                let cRefSets = map S.singleton $ tablishColumnNames relation
+                 in tell $ zipWith aliasObservation cAliases cRefSets
+
     goColumns (TablishJoin _ _ cond lhs rhs) = do
         bindClause "JOIN" $ goColumns cond
         goColumns lhs
@@ -454,6 +464,8 @@ instance HasColumns (Expr ResolvedNames a) where
     goColumns (ArrayAccessExpr _ expr idx) = mapM_ goColumns [expr, idx] -- NB we aren't emitting any special info about array access (for now)
     goColumns (TypeCastExpr _ _ expr _) = goColumns expr
     goColumns (VariableSubstitutionExpr _) = return ()
+    goColumns (LambdaParamExpr _ _) = return ()
+    goColumns (LambdaExpr _ _ body) = goColumns body
 
 instance HasColumns (Escape ResolvedNames a) where
     goColumns (Escape expr) = goColumns expr

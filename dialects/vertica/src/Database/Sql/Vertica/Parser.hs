@@ -1032,7 +1032,8 @@ makeExprAlias (FieldAccessExpr _ _ _) = fail "Unsupported struct access in Verti
 makeExprAlias (ArrayAccessExpr _ _ _) = fail "Unsupported array access in Vertica: unused datatype in this dialect"
 makeExprAlias (TypeCastExpr _ _ expr _) = makeExprAlias expr
 makeExprAlias (VariableSubstitutionExpr _) = fail "Unsupported variable substitution in Vertica: unused datatype in this dialect"
-
+makeExprAlias LambdaParamExpr {} = error "Unreachable, vertica does not support lambda"
+makeExprAlias LambdaExpr {} = error "Unreachable, vertica does not support lambda"
 
 aliasP :: Expr RawNames Range -> Parser (ColumnAlias Range)
 aliasP expr = choice

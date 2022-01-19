@@ -195,6 +195,12 @@ testNoResolveErrors =
                 , "CROSS JOIN UNNEST(numbers) AS t (n);"
                 ]
             ]
+        , "test named window" ~:
+          map (TestCase . parsesAndResolvesSuccessfullyPresto (makeCatalog catalog path currentDatabase))
+            [ "SELECT sum(col) OVER x FROM foo WINDOW x AS (partition by col);"
+            , "SELECT sum(col) OVER (x) FROM foo WINDOW x AS (partition by col);"
+            , "SELECT sum(col) OVER (x ORDER BY col) FROM foo WINDOW x AS (partition by col);"
+            ]
         ]
 
 

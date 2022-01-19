@@ -90,6 +90,7 @@ data ResolverInfo a = ResolverInfo
     { catalog :: Catalog
     , onCTECollision :: forall x . (x -> x) -> (x -> x)
     , bindings :: Bindings a
+    , lambdaScope :: [[LambdaParam a]]
     , selectScope :: FromColumns a -> SelectionAliases a -> SelectScope a
     , lcolumnsAreVisibleInLateralViews :: Bool
     }
@@ -101,6 +102,8 @@ mapBindings f ResolverInfo{..} = ResolverInfo{bindings = f bindings, ..}
 bindColumns :: MonadReader (ResolverInfo a) m => ColumnSet a -> m r -> m r
 bindColumns columns = local (mapBindings $ \ Bindings{..} -> Bindings{boundColumns = columns ++ boundColumns, ..})
 
+bindLambdaParams :: MonadReader (ResolverInfo a) m => [LambdaParam a] -> m r -> m r
+bindLambdaParams params = local (\ResolverInfo{..} -> ResolverInfo{lambdaScope = params:lambdaScope, ..})
 
 bindFromColumns :: MonadReader (ResolverInfo a) m => FromColumns a -> m r -> m r
 bindFromColumns = bindColumns

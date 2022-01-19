@@ -386,6 +386,10 @@ newtype ColumnAliasId
     = ColumnAliasId Integer
       deriving (Data, Generic, Read, Show, Eq, Ord)
 
+newtype LambdaParamId
+    = LambdaParamId Integer
+      deriving (Data, Generic, Read, Show, Eq, Ord)
+
 instance (Arbitrary (f (QTableName f a)), Arbitrary a) => Arbitrary (QColumnName f a) where
     arbitrary = do
         Identifier name :: Identifier '["fooColumn", "barColumn"] <- arbitrary
@@ -395,6 +399,12 @@ instance (Arbitrary (f (QTableName f a)), Arbitrary a) => Arbitrary (QColumnName
 
 data ColumnAlias a
     = ColumnAlias a Text ColumnAliasId
+      deriving ( Data, Generic
+               , Read, Show, Eq, Ord
+               , Functor, Foldable, Traversable)
+
+data LambdaParam a
+    = LambdaParam a Text LambdaParamId
       deriving ( Data, Generic
                , Read, Show, Eq, Ord
                , Functor, Foldable, Traversable)
@@ -517,6 +527,14 @@ instance ToJSON a => ToJSON (ColumnAlias a) where
         , "ident" .= ident
         ]
 
+instance ToJSON a => ToJSON (LambdaParam a) where
+    toJSON (LambdaParam info name (LambdaParamId ident)) = object
+        [ "tag" .= String "LambdaParam"
+        , "info" .= info
+        , "name" .= name
+        , "ident" .= ident
+        ]
+
 
 instance ToJSON a => ToJSON (StructFieldName a) where
     toJSON (StructFieldName info name) = object
@@ -619,6 +637,16 @@ instance FromJSON a => FromJSON (ColumnAlias a) where
 
     parseJSON v = fail $ unwords
         [ "don't know how to parse as ColumnAlias:"
+        , show v
+        ]
+
+instance FromJSON a => FromJSON (LambdaParam a) where
+    parseJSON (Object o) = do
+        String "LambdaParam" <- o .: "tag"
+        LambdaParam <$> o .: "info" <*> o .: "name" <*> (LambdaParamId <$> o .: "ident")
+
+    parseJSON v = fail $ unwords
+        [ "don't know how to parse as LambdaParam:"
         , show v
         ]
 

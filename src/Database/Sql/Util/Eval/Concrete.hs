@@ -116,6 +116,10 @@ instance Evaluation Concrete where
 
     handleFunction _ _ _ _ _ _ _ = throwError "function exprs not yet supported"
 
+    handleLambdaParam _ _ = error "unreachable, lambda should be handled inside a function"
+
+    handleLambda _ _ _ = error "unreachable, lambda should be handled inside a function"
+
     handleLike _ _ _ _ _ = throwError "concrete evaluation for LIKE expressions not yet supported"
 
     handleOrder p orders (RecordSet cs rs) = do
