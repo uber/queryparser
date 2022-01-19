@@ -215,6 +215,7 @@ instance Evaluation e => Evaluate e (Tablish ResolvedNames Range) where
         Just result -> pure result
 
     eval p (TablishSubQuery _ _ query) = eval p query
+    eval p (TablishParenthesizedRelation _ _ relation) = eval p relation
     eval p (TablishJoin _ joinType cond lhs rhs) = do
         x <- eval p lhs
         y <- eval p rhs

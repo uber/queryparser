@@ -84,6 +84,37 @@ testColumnAccesses = test
               , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
               ]
           )
+        , testPresto "SELECT * FROM (bar);" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
+        , testPresto "SELECT * FROM (bar) t(x,y);" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
+        , testPresto "SELECT * FROM (SELECT * FROM bar) t(x,y);" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
+        , testPresto "SELECT * FROM (foo CROSS JOIN bar) t(x,y,z);" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
+        , testPresto "SELECT * FROM (bar CROSS JOIN UNNEST(ARRAY[1,2]) AS t1(x)) t;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "b", "SELECT")
+              ]
+          )
 
         -- FROM
         , testAll "SELECT 1 FROM foo JOIN bar ON foo.a = bar.a;" defaultTestCatalog
@@ -107,6 +138,12 @@ testColumnAccesses = test
         , testAll "SELECT 1 FROM (SELECT a FROM bar) subq;" defaultTestCatalog
           ((@=?) $ S.singleton
               (FullyQualifiedColumnName "default_db" "public" "bar" "a", "SELECT")
+          )
+        , testPresto "SELECT 1 FROM (foo JOIN bar ON foo.a = bar.a);" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "JOIN")
+              , (FullyQualifiedColumnName "default_db" "public" "bar" "a", "JOIN")
+              ]
           )
 
         -- WHERE
@@ -182,6 +219,12 @@ testColumnAccesses = test
               ]
           )
         , testPresto "SELECT cAlias FROM (SELECT a FROM foo) AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
+          ((@=?) $ S.fromList
+              [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
+              , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")
+              ]
+          )
+        , testPresto "SELECT cAlias FROM (foo) AS tAlias (cAlias) ORDER BY cAlias;" defaultTestCatalog
           ((@=?) $ S.fromList
               [ (FullyQualifiedColumnName "default_db" "public" "foo" "a", "SELECT")
               , (FullyQualifiedColumnName "default_db" "public" "foo" "a", "ORDER")

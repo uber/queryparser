@@ -26,7 +26,7 @@
 module Database.Sql.Util.Scope
     ( runResolverWarn, runResolverWError, runResolverNoWarn
     , WithColumns (..)
-    , queryColumnNames
+    , queryColumnNames, tablishColumnNames
     , resolveStatement, resolveQuery, resolveQueryWithColumns, resolveSelectAndOrders, resolveCTE, resolveInsert
     , resolveInsertValues, resolveDefaultExpr, resolveDelete, resolveTruncate
     , resolveCreateTable, resolveTableDefinition, resolveColumnOrConstraint
@@ -236,6 +236,37 @@ queryColumnNames (QueryWith _ _ query) = queryColumnNames query
 queryColumnNames (QueryOrder _ _ query) = queryColumnNames query
 queryColumnNames (QueryLimit _ _ query) = queryColumnNames query
 queryColumnNames (QueryOffset _ _ query) = queryColumnNames query
+
+
+tablishColumnNames :: Tablish ResolvedNames a -> [RColumnRef a]
+tablishColumnNames (TablishTable _ tablishAliases tableRef) =
+    case tablishAliases of
+        TablishAliasesNone -> getColumnList tableRef
+        TablishAliasesT _ -> getColumnList tableRef
+        TablishAliasesTC _ cAliases -> map RColumnAlias cAliases
+
+tablishColumnNames (TablishSubQuery _ tablishAliases query) =
+    case tablishAliases of
+        TablishAliasesNone -> queryColumnNames query
+        TablishAliasesT _ -> queryColumnNames query
+        TablishAliasesTC _ cAliases -> map RColumnAlias cAliases
+
+tablishColumnNames (TablishParenthesizedRelation _ tablishAliases relation) =
+    case tablishAliases of
+        TablishAliasesNone -> tablishColumnNames relation
+        TablishAliasesT _ -> tablishColumnNames relation
+        TablishAliasesTC _ cAliases -> map RColumnAlias cAliases
+
+tablishColumnNames (TablishJoin _ _ _ lhs rhs) =
+    tablishColumnNames lhs ++ tablishColumnNames rhs
+
+tablishColumnNames (TablishLateralView _ LateralView{..} lhs) =
+    let cols = maybe [] tablishColumnNames lhs in
+    case lateralViewAliases of
+        TablishAliasesNone -> cols
+        TablishAliasesT _ -> cols
+        TablishAliasesTC _ cAliases -> cols ++ map RColumnAlias cAliases
+    
 
 resolveSelectAndOrders :: Select RawNames a -> [Order RawNames a] -> Resolver (WithColumnsAndOrders (Select ResolvedNames)) a
 resolveSelectAndOrders Select{..} orders = do
@@ -688,6 +719,16 @@ resolveTablish (TablishSubQuery info aliases query) = do
             TablishAliasesTC t cs -> (Just $ RTableAlias t columns, map RColumnAlias cs)
 
     pure $ WithColumns (TablishSubQuery info aliases query') [(tAlias, cAliases)]
+
+resolveTablish (TablishParenthesizedRelation info aliases relation) = do
+    WithColumns relation' columns <- resolveTablish relation
+    let colRefs = concatMap snd columns
+        columns' = case aliases of
+            TablishAliasesNone -> columns
+            TablishAliasesT t -> map (first $ const $ Just $ RTableAlias t colRefs) columns
+            TablishAliasesTC t cs -> [(Just $ RTableAlias t colRefs, map RColumnAlias cs)]
+
+    pure $ WithColumns (TablishParenthesizedRelation info aliases relation') columns'
 
 resolveTablish (TablishJoin info joinType cond lhs rhs) = do
     WithColumns lhs' lcolumns <- resolveTablish lhs

@@ -1223,6 +1223,10 @@ tablishToTableAlias (TablishSubQuery _ aliases _) = case aliases of
     TablishAliasesNone -> error "shouldn't happen in hive"
     TablishAliasesT (TableAlias _ name _) -> S.singleton name
     TablishAliasesTC _ _ -> error "shouldn't happen in hive"
+tablishToTableAlias (TablishParenthesizedRelation _ aliases relation) = case aliases of
+    TablishAliasesNone -> tablishToTableAlias relation
+    TablishAliasesT _ -> error "shouldn't happen in hive"
+    TablishAliasesTC _ _ -> error "shouldn't happen in hive"
 tablishToTableAlias (TablishLateralView _ LateralView{..} _) = case lateralViewAliases of
     TablishAliasesNone -> error "shouldn't happen in hive"
     TablishAliasesT (TableAlias _ name _) -> S.singleton name
